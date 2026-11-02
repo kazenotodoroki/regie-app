@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Trois barres de VU-mètre + ligne de crête -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#E9A23B" android:pathData="M36,58h8v16h-8z" />
+    <path android:fillColor="#E9A23B" android:pathData="M50,42h8v32h-8z" />
+    <path android:fillColor="#E9A23B" android:pathData="M64,50h8v24h-8z" />
+    <path android:fillColor="#D8DCE1" android:pathData="M34,34h40v3h-40z" />
+</vector>

@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}[hidden]{display:none!important}</style>
+</head><body>
+<title>Régie</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one-column instrument panel, sticky header + scrollable tab strip, flat panels with hairline borders, 2px radius */
+:root{
+  --bg:#0c0e11; --panel:#13161a; --panel2:#191d22; --line:#262b32; --fg:#d8dce1; --dim:#7b8490;
+  --accent:#e9a23b; --accent-ink:#1a1206; --blue:#6aa6e6; --ok:#5dbb78; --bad:#e2584f;
+  --sans:"sans-serif-condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --mono:"Roboto Mono","DejaVu Sans Mono",ui-monospace,Menlo,monospace;
+  --r:2px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:15px/1.4 var(--sans);-webkit-tap-highlight-color:transparent;padding-bottom:40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));max-width:760px;margin:0 auto}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:12px;padding-block:10px 8px}
+.brand{font-weight:700;letter-spacing:.22em;font-size:15px}
+.brand i{font-style:normal;color:var(--accent)}
+.tchip{margin-left:auto;display:flex;align-items:center;gap:6px;font:12px var(--mono);color:var(--dim)}
+.tchip input{width:58px;padding:4px 6px;font:13px var(--mono);text-align:right}
+.tchip b{color:var(--fg);font-weight:500}
+nav{display:flex;overflow-x:auto;scrollbar-width:none;gap:0}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);font:600 13px var(--sans);letter-spacing:.12em;padding:9px 12px 8px;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav button .dot{display:inline-block;width:6px;height:6px;background:var(--ok);margin-left:6px;vertical-align:2px;border-radius:1px}
+main{padding-block:14px}
+section{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.ph{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ph h2{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.ph small{color:var(--dim);font:11px var(--mono)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--dim);min-width:0}
+input,select{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);padding:8px;font:15px var(--mono);width:100%;min-width:0}
+input:focus,select:focus,button:focus-visible{outline:1px solid var(--accent);outline-offset:0}
+input[type=range]{padding:0;border:0;accent-color:var(--accent);height:28px}
+.btn{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font:600 13px var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.btn:active{background:var(--line)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.on{background:var(--ok);color:#06140a;border-color:var(--ok)}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:6px 9px;font-size:11px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1 1 0;min-width:0}
+.kv{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r)}
+.kv div{flex:1 1 130px;background:var(--panel);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv span{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.kv b{font:500 18px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv b.acc{color:var(--accent)}
+.big{font:500 44px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dim{color:var(--dim)}
+.note{font-size:12px;color:var(--dim);margin:8px 0 0}
+.warnmsg{font-size:13px;color:var(--bad);margin:8px 0 0}
+table{width:100%;border-collapse:collapse;font:13px var(--mono);font-variant-numeric:tabular-nums}
+th{font:600 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:right;padding:5px 6px;border-bottom:1px solid var(--line)}
+td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.tscroll{overflow-x:auto}
+canvas{display:block;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.seg button{flex:1;background:var(--bg);color:var(--dim);border:0;border-right:1px solid var(--line);padding:8px 4px;font:600 12px var(--sans);letter-spacing:.08em;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--accent)}
+/* Heures */
+.clock{display:flex;flex-direction:column;gap:12px}
+.status{display:flex;align-items:center;gap:8px;font:600 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.status i{width:9px;height:9px;background:var(--dim);border-radius:1px}
+.status.live{color:var(--ok)} .status.live i{background:var(--ok);animation:blink 1.6s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.status.live i{animation:none}}
+.punch{width:100%;padding:20px;font:700 18px var(--sans);letter-spacing:.24em}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;align-items:end}
+.week div{display:flex;flex-direction:column;align-items:center;gap:3px;font:11px var(--mono);color:var(--dim);min-width:0}
+.week .bar{width:100%;background:var(--line);height:56px;position:relative;border-radius:1px}
+.week .bar s{position:absolute;left:0;right:0;bottom:0;background:var(--accent);text-decoration:none}
+.week .today{color:var(--fg)}
+.day{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.dayh{display:flex;justify-content:space-between;font:600 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.ent{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:6px 0;cursor:pointer;font-size:14px}
+.ent .t{font-family:var(--mono)}
+.ent .l{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ent .d{font-family:var(--mono)}
+.ent.live .d{color:var(--ok)}
+.edit .grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.edit{background:var(--panel2);border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}
+textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px solid var(--line);font:12px var(--mono);padding:8px;border-radius:var(--r)}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="brand">RÉ<i>G</i>IE</div>
+      <label class="tchip" title="Température de l'air, utilisée par tous les calculs">T <input id="gT" type="number" step="0.5" inputmode="decimal" value="20"> °C · c <b id="gC">343</b> m/s</label>
+    </div>
+    <nav id="tabs" role="tablist">
+      <button data-t="heures">HEURES</button>
+      <button data-t="son">CÉLÉRITÉ</button>
+      <button data-t="trigo">TÉLÉMÈTRE</button>
+      <button data-t="array">LINE ARRAY</button>
+      <button data-t="gen">GÉNÉRATEUR</button>
+      <button data-t="rta">ANALYSEUR</button>
+      <button data-t="delai">DÉLAIS</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ HEURES ============ -->
+<section id="t-heures" hidden>
+  <div class="panel clock">
+    <div class="status" id="hStatus"><i></i><span>Hors service</span></div>
+    <div class="big" id="hRun">0:00:00</div>
+    <label class="f">Prod / événement<input id="hLabel" type="text" placeholder="ex. Festival — montage" autocomplete="off"></label>
+    <button class="btn pri punch" id="hPunch">TIMBRER L'ENTRÉE</button>
+  </div>
+  <div class="kv">
+    <div><span>Aujourd'hui</span><b id="hDay" class="acc">0 h 00</b></div>
+    <div><span>Semaine</span><b id="hWeek">0 h 00</b></div>
+    <div><span>Mois</span><b id="hMonth">0 h 00</b></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Semaine en cours</h2><small id="hWeekRange"></small></div>
+    <div class="week" id="hWeekBars"></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Journal</h2>
+      <div class="row"><button class="btn sm" id="hAdd">+ Saisie</button><button class="btn sm" id="hExport">Export CSV</button></div>
+    </div>
+    <div id="hCsvBox" hidden><textarea id="hCsv" readonly></textarea><p class="note">Sélectionnez et copiez le texte ci-dessus.</p></div>
+    <div id="hList"></div>
+  </div>
+</section>
+
+<!-- ============ CÉLÉRITÉ ============ -->
+<section id="t-son" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Vitesse du son</h2><small>c ≈ 331,3 + 0,606·T + 0,0124·HR</small></div>
+    <div class="grid">
+      <label class="f">Température °C<input id="sT" type="number" step="0.5" inputmode="decimal"></label>
+      <label class="f">Humidité relative %<input id="sH" type="number" step="5" inputmode="decimal" value="50"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Célérité</span><b id="sC" class="acc"></b></div>
+      <div><span>Par mètre</span><b id="sMsM"></b></div>
+      <div><span>Par milliseconde</span><b id="sMMs"></b></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Distance ↔ délai</h2></div>
+    <div class="grid">
+      <label class="f">Distance m<input id="sD" type="number" step="any" inputmode="decimal" value="30"></label>
+      <label class="f">Délai ms<input id="sMs" type="number" step="any" inputmode="decimal"></label>
+      <label class="f">Échantillons @48k<input id="sSmp" type="text" readonly></label>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Longueur d'onde</h2></div>
+    <div class="grid"><label class="f">Fréquence Hz<input id="sF" type="number" step="any" inputmode="decimal" value="63"></label></div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>λ</span><b id="sL"></b></div><div><span>λ / 2</span><b id="sL2"></b></div><div><span>λ / 4</span><b id="sL4"></b></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Dérive thermique d'un délai</h2><small>réglé à T1, joué à T2</small></div>
+    <div class="grid">
+      <label class="f">Distance m<input id="sdD" type="number" step="any" inputmode="decimal" value="60"></label>
+      <label class="f">T1 réglage °C<input id="sdT1" type="number" step="0.5" inputmode="decimal" value="14"></label>
+      <label class="f">T2 show °C<input id="sdT2" type="number" step="0.5" inputmode="decimal" value="26"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Délai à T1</span><b id="sd1"></b></div><div><span>Délai à T2</span><b id="sd2"></b></div><div><span>Écart</span><b id="sdX" class="acc"></b></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Table rapide</h2><small id="sTabT"></small></div>
+    <div class="tscroll"><table id="sTab"></table></div>
+  </div>
+</section>
+
+<!-- ============ TÉLÉMÈTRE ============ -->
+<section id="t-trigo" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Visée simple</h2><small>distance laser + inclinaison</small></div>
+    <div class="grid">
+      <label class="f">Distance mesurée m<input id="g1L" type="number" step="any" inputmode="decimal" value="32.4"></label>
+      <label class="f">Inclinaison °<input id="g1A" type="number" step="any" inputmode="decimal" value="12"></label>
+      <label class="f">Hauteur télémètre m<input id="g1H" type="number" step="any" inputmode="decimal" value="1.6"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Distance horiz.</span><b id="g1X" class="acc"></b></div><div><span>Dénivelé</span><b id="g1Y"></b></div><div><span>Hauteur du point</span><b id="g1Z"></b></div><div><span>Délai (oblique)</span><b id="g1T"></b></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Hauteur d'un objet</h2><small>deux visées, haut et bas</small></div>
+    <div class="grid">
+      <label class="f">Haut : distance m<input id="g2L1" type="number" step="any" inputmode="decimal" value="24.1"></label>
+      <label class="f">Haut : angle °<input id="g2A1" type="number" step="any" inputmode="decimal" value="28"></label>
+      <label class="f">Bas : distance m<input id="g2L2" type="number" step="any" inputmode="decimal" value="21.4"></label>
+      <label class="f">Bas : angle °<input id="g2A2" type="number" step="any" inputmode="decimal" value="-4"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Hauteur objet</span><b id="g2H" class="acc"></b></div><div><span>Distance horiz. haut</span><b id="g2X1"></b></div><div><span>Distance horiz. bas</span><b id="g2X2"></b></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Distance entre deux points</h2><small>depuis un même poste</small></div>
+    <div class="grid">
+      <label class="f">Point A : distance m<input id="g3A" type="number" step="any" inputmode="decimal" value="38"></label>
+      <label class="f">Point B : distance m<input id="g3B" type="number" step="any" inputmode="decimal" value="41"></label>
+      <label class="f">Angle entre A et B °<input id="g3G" type="number" step="any" inputmode="decimal" value="35"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Distance A–B</span><b id="g3D" class="acc"></b></div><div><span>Écart de parcours</span><b id="g3dd"></b></div><div><span>Écart de délai</span><b id="g3dt"></b></div>
+    </div>
+    <p class="note">L'écart de délai compare les trajets A→poste et B→poste : c'est le délai à appliquer pour aligner les deux sources sur ce poste.</p>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Angle de visée</h2><small>pour régler un site</small></div>
+    <div class="grid">
+      <label class="f">Dénivelé m<input id="g4H" type="number" step="any" inputmode="decimal" value="7.5"></label>
+      <label class="f">Distance horiz. m<input id="g4D" type="number" step="any" inputmode="decimal" value="25"></label>
+    </div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Angle</span><b id="g4A" class="acc"></b></div><div><span>Distance oblique</span><b id="g4L"></b></div><div><span>Pente</span><b id="g4P"></b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LINE ARRAY ============ -->
+<section id="t-array" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Courbure de ligne</h2><small>vue de profil</small></div>
+    <div class="grid">
+      <label class="f">Haut du système m<input id="aH" type="number" step="any" inputmode="decimal" value="10"></label>
+      <label class="f">Nb d'enceintes<input id="aN" type="number" step="1" min="2" max="24" inputmode="numeric" value="12"></label>
+      <label class="f">Hauteur enceinte m<input id="aB" type="number" step="any" inputmode="decimal" value="0.36"></label>
+      <label class="f">1er rang m<input id="aD1" type="number" step="any" inputmode="decimal" value="6"></label>
+      <label class="f">Dernier rang m<input id="aD2" type="number" step="any" inputmode="decimal" value="55"></label>
+      <label class="f">Hauteur oreille m<input id="aE" type="number" step="any" inputmode="decimal" value="1.7"></label>
+      <label class="f">Angle inter max °<input id="aMax" type="number" step="any" inputmode="decimal" value="10"></label>
+      <label class="f">Pas d'angle °<select id="aStep"><option>0.25</option><option selected>0.5</option><option>1</option></select></label>
+    </div>
+    <canvas id="aCv" style="height:220px;margin-top:12px"></canvas>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Site du bumper</span><b id="aSite" class="acc"></b></div><div><span>Courbure totale</span><b id="aTot"></b></div><div><span>Longueur ligne</span><b id="aLen"></b></div><div><span>Bas du système</span><b id="aLow"></b></div>
+    </div>
+    <p class="warnmsg" id="aWarn" hidden></p>
+    <div class="tscroll" style="margin-top:10px"><table id="aTab"></table></div>
+    <p class="note">Visée progressive : les enceintes du haut couvrent le fond avec des petits angles, celles du bas ouvrent sur le premier rang. Les angles sont arrondis au pas choisi ; vérifiez les valeurs disponibles sur le système et validez au logiciel constructeur.</p>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Champ proche / lointain</h2><small>formule de Heil</small></div>
+    <div class="grid"><label class="f">Fréquence Hz<input id="aF" type="number" step="any" inputmode="decimal" value="1000"></label></div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Transition</span><b id="aR" class="acc"></b></div><div><span>Contrôle vertical dès</span><b id="aFmin"></b></div><div><span>Atténuation 1er → dernier rang</span><b id="aAtt"></b></div>
+    </div>
+    <p class="note">Jusqu'à la transition l'atténuation suit ≈ −3 dB par doublement de distance (onde cylindrique), au-delà −6 dB. Hauteur de ligne = nb d'enceintes × hauteur.</p>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Subs end-fire / cardio</h2></div>
+    <div class="grid"><label class="f">Espacement entre rangs m<input id="aSp" type="number" step="any" inputmode="decimal" value="1.0"></label></div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>End-fire : délai par rang</span><b id="aEf" class="acc"></b></div><div><span>Cardio : sub arrière, pol. inversée</span><b id="aCd"></b></div><div><span>Fréq. idéale λ/4</span><b id="aQf"></b></div>
+    </div>
+    <p class="note">End-fire : le rang arrière part sans délai, chaque rang vers l'avant reçoit un délai de plus. Cardio : le sub retourné est retardé de l'espacement entre faces avant et polarité inversée.</p>
+  </div>
+</section>
+
+<!-- ============ GÉNÉRATEUR ============ -->
+<section id="t-gen" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Signal</h2><small id="gSr"></small></div>
+    <div class="seg" id="gType">
+      <button data-v="pink" aria-pressed="true">ROSE</button><button data-v="white">BLANC</button><button data-v="sine">SINUS</button><button data-v="sweep">SWEEP</button>
+    </div>
+    <div class="grid" style="margin-top:10px">
+      <label class="f" id="gFw" hidden>Fréquence Hz<input id="gF" type="number" step="any" inputmode="decimal" value="1000"></label>
+      <label class="f gsw" hidden>Début Hz<input id="gF1" type="number" step="any" inputmode="decimal" value="20"></label>
+      <label class="f gsw" hidden>Fin Hz<input id="gF2" type="number" step="any" inputmode="decimal" value="20000"></label>
+      <label class="f gsw" hidden>Durée s<input id="gDur" type="number" step="any" inputmode="decimal" value="4"></label>
+      <label class="f gsw" hidden>Boucle<select id="gLoop"><option value="1">Oui (1 s de silence)</option><option value="0">Non</option></select></label>
+      <label class="f">Sortie<select id="gCh"><option value="LR">L + R</option><option value="L">L</option><option value="R">R</option></select></label>
+    </div>
+    <label class="f" style="margin-top:10px">Niveau crête <span class="mono" id="gLvlV">−20 dBFS</span><input id="gLvl" type="range" min="-60" max="0" step="1" value="-20"></label>
+    <div class="row" style="margin-top:6px">
+      <button class="btn pri grow" id="gPlay">LECTURE</button>
+    </div>
+    <p class="note">Sortie : haut-parleur du téléphone, jack, ou interface USB si branchée. Commencez bas et montez sur la console.</p>
+  </div>
+</section>
+
+<!-- ============ ANALYSEUR ============ -->
+<section id="t-rta" hidden>
+  <div class="panel">
+    <div class="row">
+      <button class="btn pri" id="rRun">DÉMARRER</button>
+      <button class="btn" id="rFreeze" disabled>FIGER</button>
+      <button class="btn" id="rHold">CRÊTES : NON</button>
+      <div class="grow"></div>
+      <div class="mono dim" id="rInfo">—</div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="seg grow" id="rMode"><button data-v="fft" aria-pressed="true">FFT</button><button data-v="oct">1/3 OCT</button></div>
+      <div class="seg grow" id="rAvg"><button data-v="0.5">RAPIDE</button><button data-v="0.8" aria-pressed="true">MOYEN</button><button data-v="0.93">LENT</button></div>
+    </div>
+    <canvas id="rCv" style="height:220px;margin-top:10px"></canvas>
+    <canvas id="sgCv" style="height:200px;margin-top:6px"></canvas>
+    <p class="note">Niveaux en dBFS relatifs au micro du téléphone (non calibré). Le micro est ouvert sans traitement (annulation d'écho, réduction de bruit et gain automatique désactivés quand l'appareil le permet).</p>
+  </div>
+</section>
+
+<!-- ============ DÉLAIS ============ -->
+<section id="t-delai" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Mesure par sweep</h2><small>réponse impulsionnelle</small></div>
+    <p class="note" style="margin-top:0">Branchez la sortie du téléphone sur la console. Placez le téléphone à la position d'écoute. Mesurez la source A seule, puis la source B seule : la latence de la chaîne s'annule dans la différence.</p>
+    <div class="grid" style="margin-top:10px">
+      <label class="f">Durée sweep<select id="dDur"><option value="0.5">0,5 s</option><option value="1" selected>1 s</option><option value="2">2 s</option></select></label>
+      <label class="f">Distance max m<input id="dMax" type="number" step="any" inputmode="decimal" value="120"></label>
+      <label class="f">Sortie<select id="dCh"><option value="LR">L + R</option><option value="L">L</option><option value="R">R</option></select></label>
+      <label class="f">Précédence (Haas)<select id="dHaas"><option value="0">0 ms</option><option value="2">+2 ms</option><option value="5" selected>+5 ms</option><option value="10">+10 ms</option><option value="15">+15 ms</option></select></label>
+    </div>
+    <label class="f" style="margin-top:10px">Niveau sweep <span class="mono" id="dLvlV">−12 dBFS</span><input id="dLvl" type="range" min="-40" max="0" step="1" value="-12"></label>
+    <div class="row" style="margin-top:6px">
+      <button class="btn grow" id="dA">MESURER A</button>
+      <button class="btn grow" id="dB">MESURER B</button>
+      <button class="btn grow" id="dAB">A + B ENSEMBLE</button>
+    </div>
+    <p class="note" id="dMsg"></p>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Réponses impulsionnelles</h2><small><span style="color:var(--accent)">■ A</span> &nbsp;<span style="color:var(--blue)">■ B</span></small></div>
+    <canvas id="dCv" style="height:200px"></canvas>
+    <div class="row" style="margin-top:8px"><button class="btn sm" id="dZoom">ZOOM : TOUT</button></div>
+  </div>
+  <div class="kv" id="dRes">
+    <div><span>Arrivée A</span><b id="dTa">—</b></div>
+    <div><span>Arrivée B</span><b id="dTb">—</b></div>
+    <div><span>Δ B − A</span><b id="dDt" class="acc">—</b></div>
+    <div><span>Écart en distance</span><b id="dDd">—</b></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Réglage conseillé</h2></div>
+    <div class="big" style="font-size:30px" id="dRec">—</div>
+    <p class="note" id="dRecN">Mesurez A et B pour obtenir le délai à appliquer.</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+/*DSP-START*/
+function nextPow2(n){let p=1;while(p<n)p<<=1;return p}
+function fft(re,im,inv){
+  const n=re.length;
+  for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;
+    if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+  for(let len=2;len<=n;len<<=1){
+    const half=len>>1, ang=(inv?2:-2)*Math.PI/len;
+    for(let j=0;j<half;j++){
+      const wr=Math.cos(ang*j), wi=Math.sin(ang*j);
+      for(let i=j;i<n;i+=len){
+        const k=i+half, vr=re[k]*wr-im[k]*wi, vi=re[k]*wi+im[k]*wr;
+        re[k]=re[i]-vr; im[k]=im[i]-vi; re[i]+=vr; im[i]+=vi;
+      }
+    }
+  }
+  if(inv){for(let i=0;i<n;i++){re[i]/=n;im[i]/=n}}
+}
+function makeSweep(sr,dur,f1,f2){
+  const n=Math.round(sr*dur), out=new Float32Array(n), L=Math.log(f2/f1), K=2*Math.PI*f1*dur/L;
+  const fade=Math.min(Math.round(sr*0.01),n>>3);
+  for(let i=0;i<n;i++){
+    const t=i/sr; let v=Math.sin(K*(Math.exp(t*L/dur)-1));
+    if(i<fade)v*=0.5-0.5*Math.cos(Math.PI*i/fade);
+    if(i>n-fade)v*=0.5-0.5*Math.cos(Math.PI*(n-i)/fade);
+    out[i]=v;
+  }
+  return out;
+}
+// Déconvolution régularisée : h = rec ⊛ sweep⁻¹
+function deconv(rec,sweep){
+  const N=nextPow2(rec.length+sweep.length);
+  const rr=new Float64Array(N),ri=new Float64Array(N),sr=new Float64Array(N),si=new Float64Array(N);
+  rr.set(rec); sr.set(sweep);
+  fft(rr,ri,false); fft(sr,si,false);
+  let pmax=0; for(let k=0;k<N;k++){const p=sr[k]*sr[k]+si[k]*si[k]; if(p>pmax)pmax=p}
+  const eps=pmax*1e-3;
+  for(let k=0;k<N;k++){
+    const a=rr[k],b=ri[k],c=sr[k],d=si[k], den=c*c+d*d+eps;
+    rr[k]=(a*c+b*d)/den; ri[k]=(b*c-a*d)/den;
+  }
+  fft(rr,ri,true);
+  return Float32Array.from(rr.subarray(0,rec.length));
+}
+function peakIn(h,from,to,exclude){
+  let bi=-1,bv=0;
+  for(let i=Math.max(1,from);i<Math.min(h.length-1,to);i++){
+    if(exclude&&i>=exclude[0]&&i<=exclude[1])continue;
+    const v=Math.abs(h[i]); if(v>bv){bv=v;bi=i}
+  }
+  if(bi<0)return null;
+  const y0=Math.abs(h[bi-1]),y1=bv,y2=Math.abs(h[bi+1]),den=y0-2*y1+y2;
+  const d=den!==0?0.5*(y0-y2)/den:0;
+  return {i:bi+Math.max(-0.5,Math.min(0.5,d)),idx:bi,amp:bv,sign:Math.sign(h[bi])};
+}
+function snrOf(h,p,sr,to){
+  const a=p.idx-Math.round(sr*0.003), b=p.idx+Math.round(sr*0.08);
+  let s=0,n=0; for(let i=0;i<to;i++){if(i>=a&&i<=b)continue; s+=h[i]*h[i]; n++}
+  const rms=Math.sqrt(s/Math.max(1,n))||1e-12;
+  return 20*Math.log10(p.amp/rms);
+}
+function analyzeIR(h,sr,winSamples,two){
+  const p1=peakIn(h,0,winSamples);
+  if(!p1)return null;
+  const res={p1,snr:snrOf(h,p1,sr,winSamples)};
+  if(two){
+    const ex=Math.round(sr*0.0008);
+    const p2=peakIn(h,0,winSamples,[p1.idx-ex,p1.idx+ex]);
+    if(p2&&p2.amp>p1.amp*0.1)res.p2=p2;
+  }
+  return res;
+}
+/*DSP-END*/
+</script>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const num=el=>{const v=parseFloat(String((typeof el==='string'?$(el):el).value).replace(',','.'));return isFinite(v)?v:NaN};
+const f=(x,d=1)=>isFinite(x)?x.toLocaleString('fr-CH',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const deg=r=>r*180/Math.PI, rad=d=>d*Math.PI/180;
+const Android=window.RegieAndroid||null;
+
+/* ---------- Température globale ---------- */
+const cOf=(T,H=50)=>331.3+0.606*T+0.0124*H;
+let T=store.get('regie.T',20);
+function C(){return cOf(T,num('#sH')||50)}
+$('#gT').value=T;
+function setT(v,src){if(!isFinite(v))return;T=v;store.set('regie.T',T);if(src!=='g')$('#gT').value=T;if(src!=='s')$('#sT').value=T;$('#gC').textContent=f(C(),1);refreshAll()}
+$('#gT').addEventListener('input',e=>setT(num(e.target),'g'));
+
+/* ---------- Onglets ---------- */
+const tabs=$$('#tabs button');
+let curTab=null;
+function show(t){
+  curTab=t;
+  tabs.forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  $$('main>section').forEach(s=>s.hidden=s.id!=='t-'+t);
+  store.set('regie.tab',t);
+  if(t==='array')drawArray();
+  if(t==='delai')drawIR();
+}
+tabs.forEach(b=>b.onclick=()=>show(b.dataset.t));
+function segInit(id,cb){const s=$(id);s.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  s.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));cb(b.dataset.v)})}
+function segVal(id){const b=$(id+' button[aria-pressed="true"]');return b?b.dataset.v:null}
+function fitCanvas(cv){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;const w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}return {w,h,d}}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ================= HEURES ================= */
+let H=store.get('regie.heures',{entries:[],label:''});
+const saveH=()=>store.set('regie.heures',H);
+const active=()=>H.entries.find(e=>!e.end);
+const dur=ms=>{const m=Math.floor(ms/60000);return Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')};
+const hms=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/3600)+':'+String(Math.floor(s/60)%60).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const hm=ms=>{const d=new Date(ms);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const sod=ms=>{const d=new Date(ms);d.setHours(0,0,0,0);return d.getTime()};
+const sow=ms=>{const d=new Date(sod(ms));const wd=(d.getDay()+6)%7;d.setDate(d.getDate()-wd);return d.getTime()};
+const som=ms=>{const d=new Date(sod(ms));d.setDate(1);return d.getTime()};
+const addDays=(ms,n)=>{const d=new Date(ms);d.setDate(d.getDate()+n);return d.getTime()};
+const overlap=(e,a,b)=>Math.max(0,Math.min(e.end||Date.now(),b)-Math.max(e.start,a));
+const total=(a,b)=>H.entries.reduce((s,e)=>s+overlap(e,a,b),0);
+const DAYS=['DIM','LUN','MAR','MER','JEU','VEN','SAM'];
+const toLocal=ms=>{const d=new Date(ms-new Date(ms).getTimezoneOffset()*60000);return d.toISOString().slice(0,16)};
+let editing=null, confirmDel=false;
+
+$('#hLabel').value=H.label||'';
+$('#hLabel').addEventListener('input',e=>{H.label=e.target.value;const a=active();if(a)a.label=H.label;saveH();renderList()});
+$('#hPunch').onclick=()=>{
+  const a=active();
+  if(a)a.end=Date.now(); else H.entries.push({id:Date.now().toString(36),start:Date.now(),end:null,label:H.label||''});
+  saveH(); if(Android&&Android.vibrate)Android.vibrate(40); renderHeures();
+};
+$('#hAdd').onclick=()=>{const now=Date.now();const e={id:now.toString(36),start:now-3600000,end:now,label:H.label||''};H.entries.push(e);saveH();editing=e.id;renderList()};
+$('#hExport').onclick=()=>{
+  const rows=[['Date','Début','Fin','Durée (h)','Durée','Prod']];
+  [...H.entries].sort((a,b)=>a.start-b.start).forEach(e=>{
+    const end=e.end||Date.now(), d=new Date(e.start);
+    rows.push([d.toLocaleDateString('fr-CH'),hm(e.start),e.end?hm(e.end):'en cours',((end-e.start)/3600000).toFixed(2).replace('.',','),dur(end-e.start),(e.label||'').replace(/;/g,',')]);
+  });
+  const csv=rows.map(r=>r.join(';')).join('\r\n');
+  const name='heures_'+new Date().toISOString().slice(0,10)+'.csv';
+  if(Android&&Android.shareFile){Android.shareFile(name,'text/csv','﻿'+csv);return}
+  $('#hCsv').value=csv; $('#hCsvBox').hidden=false; $('#hCsv').select();
+};
+function renderHeures(){
+  const a=active(), now=Date.now();
+  $('#hStatus').classList.toggle('live',!!a);
+  $('#hStatus span').textContent=a?'En service depuis '+hm(a.start):'Hors service';
+  $('#hRun').textContent=a?hms(now-a.start):'0:00:00';
+  $('#hRun').style.color=a?'':'var(--dim)';
+  const p=$('#hPunch'); p.textContent=a?'TIMBRER LA SORTIE':'TIMBRER L’ENTRÉE'; p.className='btn punch '+(a?'warn':'pri');
+  const d0=sod(now), w0=sow(now), m0=som(now);
+  $('#hDay').textContent=dur(total(d0,addDays(d0,1)));
+  $('#hWeek').textContent=dur(total(w0,addDays(w0,7)));
+  $('#hMonth').textContent=dur(total(m0,new Date(new Date(m0).setMonth(new Date(m0).getMonth()+1)).getTime()));
+  const vals=[...Array(7)].map((_,i)=>total(addDays(w0,i),addDays(w0,i+1)));
+  const mx=Math.max(8*3600000,...vals);
+  $('#hWeekBars').innerHTML=vals.map((v,i)=>{const day=addDays(w0,i);return `<div class="${day===d0?'today':''}"><span>${v?(v/3600000).toFixed(1):''}</span><div class="bar"><s style="height:${(v/mx*100).toFixed(1)}%"></s></div><span>${DAYS[new Date(day).getDay()]}</span></div>`}).join('');
+  const e6=addDays(w0,6); $('#hWeekRange').textContent=new Date(w0).toLocaleDateString('fr-CH',{day:'2-digit',month:'2-digit'})+' – '+new Date(e6).toLocaleDateString('fr-CH',{day:'2-digit',month:'2-digit'});
+  renderList();
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderList(){
+  const list=$('#hList'), byDay=new Map();
+  [...H.entries].sort((a,b)=>b.start-a.start).forEach(e=>{const k=sod(e.start);if(!byDay.has(k))byDay.set(k,[]);byDay.get(k).push(e)});
+  if(!byDay.size){list.innerHTML='<p class="note">Aucune entrée. Timbrez l’entrée pour démarrer le compteur, ou ajoutez une saisie manuelle.</p>';return}
+  let html='', n=0;
+  for(const [k,es] of byDay){
+    if(n++>45)break;
+    const d=new Date(k);
+    html+=`<div class="day"><div class="dayh"><span>${DAYS[d.getDay()]} ${d.toLocaleDateString('fr-CH',{day:'2-digit',month:'2-digit',year:'2-digit'})}</span><span class="mono">${dur(es.reduce((s,e)=>s+((e.end||Date.now())-e.start),0))}</span></div>`;
+    for(const e of es.slice().reverse()){
+      html+=`<div class="ent ${e.end?'':'live'}" data-id="${e.id}"><span class="t">${hm(e.start)} → ${e.end?hm(e.end):'…'}</span><span class="l">${esc(e.label||'')}</span><span class="d">${dur((e.end||Date.now())-e.start)}</span></div>`;
+      if(editing===e.id)html+=`<div class="edit" data-ed="${e.id}">
+        <div class="grid"><label class="f">Début<input type="datetime-local" id="eS" value="${toLocal(e.start)}"></label>
+        <label class="f">Fin<input type="datetime-local" id="eE" value="${e.end?toLocal(e.end):''}"></label></div>
+        <label class="f">Prod<input type="text" id="eL" value="${esc(e.label||'')}"></label>
+        <div class="row"><button class="btn pri sm" data-a="save">Enregistrer</button><button class="btn sm" data-a="cancel">Annuler</button><div class="grow"></div><button class="btn warn sm" data-a="del">${confirmDel?'Confirmer la suppression':'Supprimer'}</button></div></div>`;
+    }
+    html+='</div>';
+  }
+  list.innerHTML=html;
+}
+$('#hList').addEventListener('click',ev=>{
+  const ent=ev.target.closest('.ent');
+  if(ent){editing=editing===ent.dataset.id?null:ent.dataset.id;confirmDel=false;renderList();return}
+  const b=ev.target.closest('button[data-a]'); if(!b)return;
+  const e=H.entries.find(x=>x.id===editing); if(!e)return;
+  if(b.dataset.a==='cancel'){editing=null;confirmDel=false}
+  if(b.dataset.a==='del'){if(!confirmDel){confirmDel=true;renderList();return}H.entries=H.entries.filter(x=>x!==e);editing=null;confirmDel=false}
+  if(b.dataset.a==='save'){
+    const s=new Date($('#eS').value).getTime(), en=$('#eE').value?new Date($('#eE').value).getTime():null;
+    if(!isFinite(s)||(en!==null&&(!isFinite(en)||en<=s))){$('#eE').style.borderColor='var(--bad)';return}
+    if(en===null&&H.entries.some(x=>x!==e&&!x.end)){$('#eE').style.borderColor='var(--bad)';return}
+    e.start=s;e.end=en;e.label=$('#eL').value;editing=null;
+  }
+  saveH();renderHeures();
+});
+setInterval(()=>{if(curTab==='heures'&&active()&&!editing)renderHeures();else if(curTab==='heures'&&active())$('#hRun').textContent=hms(Date.now()-active().start)},1000);
+
+/* ================= CÉLÉRITÉ ================= */
+$('#sT').value=T;
+$('#sT').addEventListener('input',e=>setT(num(e.target),'s'));
+$('#sH').addEventListener('input',refreshAll);
+let lastSon='d';
+$('#sD').addEventListener('input',()=>{lastSon='d';calcSon()});
+$('#sMs').addEventListener('input',()=>{lastSon='t';calcSon()});
+['#sF','#sdD','#sdT1','#sdT2'].forEach(s=>$(s).addEventListener('input',calcSon));
+function calcSon(){
+  const c=C();
+  $('#sC').textContent=f(c,1)+' m/s'; $('#sMsM').textContent=f(1000/c,3)+' ms'; $('#sMMs').textContent=f(c/1000,3)+' m';
+  if(lastSon==='d'){const d=num('#sD');$('#sMs').value=isFinite(d)?(d/c*1000).toFixed(2):''}
+  else{const t=num('#sMs');$('#sD').value=isFinite(t)?(t*c/1000).toFixed(2):''}
+  const t=num('#sMs'); $('#sSmp').value=isFinite(t)?Math.round(t*48)+' smp':'';
+  const fr=num('#sF'), l=c/fr;
+  $('#sL').textContent=f(l,2)+' m'; $('#sL2').textContent=f(l/2,2)+' m'; $('#sL4').textContent=f(l/4,2)+' m';
+  const D=num('#sdD'), t1=D/cOf(num('#sdT1'),num('#sH')||50)*1000, t2=D/cOf(num('#sdT2'),num('#sH')||50)*1000;
+  $('#sd1').textContent=f(t1,2)+' ms'; $('#sd2').textContent=f(t2,2)+' ms'; $('#sdX').textContent=(t2-t1>0?'+':'')+f(t2-t1,2)+' ms';
+  $('#sTabT').textContent='à '+f(T,1)+' °C';
+  const ds=[1,2,5,10,15,20,25,30,40,50,60,75,100,150];
+  $('#sTab').innerHTML='<tr><th>Distance</th><th>Délai</th><th>Distance</th><th>Délai</th></tr>'+
+    ds.slice(0,7).map((d,i)=>`<tr><td>${d} m</td><td>${f(d/c*1000,2)} ms</td><td>${ds[i+7]} m</td><td>${f(ds[i+7]/c*1000,2)} ms</td></tr>`).join('');
+}
+
+/* ================= TÉLÉMÈTRE ================= */
+$$('#t-trigo input').forEach(i=>i.addEventListener('input',calcTrigo));
+function calcTrigo(){
+  const c=C();
+  let L=num('#g1L'),a=rad(num('#g1A')),h0=num('#g1H')||0;
+  $('#g1X').textContent=f(L*Math.cos(a),2)+' m'; $('#g1Y').textContent=f(L*Math.sin(a),2)+' m';
+  $('#g1Z').textContent=f(h0+L*Math.sin(a),2)+' m'; $('#g1T').textContent=f(L/c*1000,2)+' ms';
+  const L1=num('#g2L1'),a1=rad(num('#g2A1')),L2=num('#g2L2'),a2=rad(num('#g2A2'));
+  $('#g2H').textContent=f(L1*Math.sin(a1)-L2*Math.sin(a2),2)+' m';
+  $('#g2X1').textContent=f(L1*Math.cos(a1),2)+' m'; $('#g2X2').textContent=f(L2*Math.cos(a2),2)+' m';
+  const A=num('#g3A'),B=num('#g3B'),g=rad(num('#g3G'));
+  $('#g3D').textContent=f(Math.sqrt(A*A+B*B-2*A*B*Math.cos(g)),2)+' m';
+  $('#g3dd').textContent=f(Math.abs(A-B),2)+' m'; $('#g3dt').textContent=f(Math.abs(A-B)/c*1000,2)+' ms';
+  const dh=num('#g4H'),dd=num('#g4D');
+  $('#g4A').textContent=f(deg(Math.atan2(dh,dd)),1)+'°'; $('#g4L').textContent=f(Math.hypot(dh,dd),2)+' m'; $('#g4P').textContent=f(dh/dd*100,1)+' %';
+}
+
+/* ================= LINE ARRAY ================= */
+$$('#t-array input, #t-array select').forEach(i=>i.addEventListener('input',()=>{calcArray();drawArray()}));
+let ARR=null;
+function calcArray(){
+  const Hh=num('#aH'),n=Math.max(2,Math.min(24,Math.round(num('#aN')||2))),b=num('#aB'),D1=num('#aD1'),D2=num('#aD2'),ear=num('#aE'),mx=num('#aMax'),st=parseFloat($('#aStep').value);
+  if(![Hh,b,D1,D2,ear,mx].every(isFinite)||D2<=D1||b<=0){ARR=null;return}
+  const boxes=[]; let P={x:0,y:Hh}, prev=null;
+  for(let i=0;i<n;i++){
+    const tgt=D2*Math.pow(D1/D2,i/(n-1));
+    let a=Math.atan2(P.y-ear,tgt-P.x), c;
+    for(let k=0;k<4;k++){c={x:P.x-Math.sin(a)*b/2,y:P.y-Math.cos(a)*b/2};a=Math.atan2(c.y-ear,tgt-c.x)}
+    let splay=0;
+    if(prev===null){a=rad(Math.round(deg(a)*10)/10)}
+    else{splay=Math.round(deg(a-prev)/st)*st; splay=Math.max(0,Math.min(mx,splay)); a=prev+rad(splay)}
+    c={x:P.x-Math.sin(a)*b/2,y:P.y-Math.cos(a)*b/2};
+    const imp=a>1e-4?c.x+(c.y-ear)/Math.tan(a):Infinity;
+    boxes.push({P:{...P},c,a,splay,imp,tgt});
+    P={x:P.x-Math.sin(a)*b,y:P.y-Math.cos(a)*b}; prev=a;
+  }
+  ARR={boxes,Hh,b,D1,D2,ear,n,low:P};
+  const last=boxes[n-1], first=boxes[0];
+  $('#aSite').textContent=f(-deg(first.a),1)+'°';
+  $('#aTot').textContent=f(deg(last.a-first.a),1)+'°';
+  $('#aLen').textContent=f(n*b,2)+' m';
+  $('#aLow').textContent=f(P.y,2)+' m';
+  const w=[];
+  if(last.imp>D1*1.15)w.push(`Le bas de ligne touche à ${f(last.imp,1)} m : le 1er rang (${f(D1,1)} m) est mal couvert. Augmentez l'angle max, ajoutez des enceintes ou prévoyez des front-fills.`);
+  if(P.y<ear+0.5)w.push('Le bas du système est sous la hauteur d’oreille du public : remontez l’accroche.');
+  $('#aWarn').hidden=!w.length; $('#aWarn').innerHTML=w.join('<br>');
+  $('#aTab').innerHTML='<tr><th>#</th><th>Angle inter</th><th>Site</th><th>Impact</th></tr>'+
+    boxes.map((x,i)=>`<tr><td>${i+1}</td><td>${i?f(x.splay,st===0.25?2:st===0.5?1:0)+'°':'bumper'}</td><td>${f(-deg(x.a),1)}°</td><td>${isFinite(x.imp)?f(x.imp,1)+' m':'∞'}</td></tr>`).join('');
+  // Champ proche
+  const c=C(), Lm=n*b, fq=num('#aF'), fk=fq/1000, q=3*fk*Lm;
+  const r=q>1?1.5*fk*Lm*Lm*Math.sqrt(1-1/(q*q)):0;
+  $('#aR').textContent=f(r,1)+' m'; $('#aFmin').textContent=f(c/Lm,0)+' Hz';
+  const attS=d=>r<=0?20*Math.log10(d):(d<=r?10*Math.log10(d):10*Math.log10(r)+20*Math.log10(d/r));
+  $('#aAtt').textContent='−'+f(attS(D2)-attS(D1),1)+' dB';
+  const sp=num('#aSp');
+  $('#aEf').textContent=f(sp/c*1000,2)+' ms'; $('#aCd').textContent=f(sp/c*1000,2)+' ms'; $('#aQf').textContent=f(c/(4*sp),0)+' Hz';
+}
+function drawArray(){
+  const cv=$('#aCv'); if(cv.offsetParent===null)return;
+  const {w,h,d}=fitCanvas(cv), g=cv.getContext('2d'); g.clearRect(0,0,w,h);
+  if(!ARR)return;
+  const {boxes,Hh,D1,D2,ear}=ARR, pad=14*d;
+  const xmin=-2, xmax=D2*1.05, ymax=Hh+1;
+  const s=(w-2*pad)/(xmax-xmin), sy=Math.min((h-2*pad)/ymax,s*4), ex=sy/s;
+  const X=x=>pad+(x-xmin)*s, Y=y=>h-pad-y*sy;
+  if(ex>1.05){g.fillStyle=css('--dim');g.font=`${10*d}px ${css('--mono')}`;g.textAlign='right';g.fillText('échelle verticale ×'+f(ex,1),w-6*d,14*d)}
+  g.lineWidth=1*d;
+  // sol
+  g.strokeStyle=css('--line'); g.beginPath(); g.moveTo(0,Y(0)); g.lineTo(w,Y(0)); g.stroke();
+  // public
+  g.strokeStyle=css('--dim'); g.setLineDash([4*d,4*d]); g.beginPath(); g.moveTo(X(D1),Y(ear)); g.lineTo(X(D2),Y(ear)); g.stroke(); g.setLineDash([]);
+  g.fillStyle=css('--dim'); g.font=`${10*d}px ${css('--mono')}`; g.textAlign='center';
+  g.fillText(f(D1,0)+' m',X(D1),Y(0)+0*d-3*d); g.fillText(f(D2,0)+' m',X(D2)-10*d,Y(0)-3*d);
+  // rayons
+  const acc=css('--accent');
+  boxes.forEach((bx,i)=>{
+    const end=isFinite(bx.imp)&&bx.imp<xmax?{x:bx.imp,y:ear}:{x:xmax,y:bx.c.y-Math.tan(bx.a)*(xmax-bx.c.x)};
+    g.strokeStyle=acc; g.globalAlpha=0.35; g.beginPath(); g.moveTo(X(bx.c.x),Y(bx.c.y)); g.lineTo(X(end.x),Y(end.y)); g.stroke();
+    g.globalAlpha=1;
+  });
+  // enceintes
+  const depth=ARR.b*1.4;
+  boxes.forEach(bx=>{
+    const a=bx.a, ux=Math.cos(a), uy=-Math.sin(a), vx=-Math.sin(a), vy=-Math.cos(a);
+    const p=bx.P, q={x:p.x+vx*ARR.b,y:p.y+vy*ARR.b};
+    g.beginPath(); g.moveTo(X(p.x),Y(p.y)); g.lineTo(X(q.x),Y(q.y)); g.lineTo(X(q.x-ux*depth),Y(q.y-uy*depth)); g.lineTo(X(p.x-ux*depth),Y(p.y-uy*depth)); g.closePath();
+    g.fillStyle=css('--panel2'); g.fill(); g.strokeStyle=css('--fg'); g.stroke();
+  });
+}
+
+/* ================= AUDIO COMMUN ================= */
+let ctx=null, merger=null;
+async function ensureCtx(){
+  if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});
+    merger=ctx.createChannelMerger(2); merger.connect(ctx.destination);
+    $('#gSr').textContent=(ctx.sampleRate/1000)+' kHz'}
+  if(ctx.state!=='running')await ctx.resume();
+  return ctx;
+}
+function route(node,ch){if(ch!=='R')node.connect(merger,0,0);if(ch!=='L')node.connect(merger,0,1)}
+const dbToLin=db=>Math.pow(10,db/20);
+let wakeLock=null, audioUsers=new Set();
+function keepAwake(who,on){
+  on?audioUsers.add(who):audioUsers.delete(who);
+  const want=audioUsers.size>0;
+  if(Android&&Android.keepScreenOn){Android.keepScreenOn(want);return}
+  try{if(want&&!wakeLock&&navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{});
+      if(!want&&wakeLock){wakeLock.release();wakeLock=null}}catch(e){}
+}
+function markTab(t,on){const b=$(`#tabs button[data-t="${t}"]`);b.querySelector('.dot')?.remove();if(on)b.insertAdjacentHTML('beforeend','<span class="dot"></span>')}
+
+/* ================= GÉNÉRATEUR ================= */
+let gen=null, noiseCache={};
+function noiseBuf(kind){
+  if(noiseCache[kind]&&noiseCache[kind].sampleRate===ctx.sampleRate)return noiseCache[kind];
+  const n=ctx.sampleRate*10, b=ctx.createBuffer(1,n,ctx.sampleRate), x=b.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,mx=0;
+  for(let i=0;i<n;i++){
+    const wv=Math.random()*2-1;
+    if(kind==='white')x[i]=wv;
+    else{b0=0.99886*b0+wv*0.0555179;b1=0.99332*b1+wv*0.0750759;b2=0.969*b2+wv*0.153852;b3=0.8665*b3+wv*0.3104856;b4=0.55*b4+wv*0.5329522;b5=-0.7616*b5-wv*0.016898;
+      x[i]=b0+b1+b2+b3+b4+b5+b6+wv*0.5362;b6=wv*0.115926}
+    mx=Math.max(mx,Math.abs(x[i]));
+  }
+  for(let i=0;i<n;i++)x[i]/=mx;
+  const fd=Math.round(ctx.sampleRate*0.005);for(let i=0;i<fd;i++){x[i]*=i/fd;x[n-1-i]*=i/fd}
+  return noiseCache[kind]=b;
+}
+let gType='pink';
+segInit('#gType',v=>{gType=v;$('#gFw').hidden=v!=='sine';$$('.gsw').forEach(e=>e.hidden=v!=='sweep');if(gen)startGen()});
+$('#gLvl').addEventListener('input',e=>{const v=+e.target.value;$('#gLvlV').textContent=(v<0?'−':'')+Math.abs(v)+' dBFS';if(gen)gen.lvl.gain.setTargetAtTime(dbToLin(v),ctx.currentTime,0.02)});
+$('#gF').addEventListener('input',()=>{if(gen&&gen.osc){const v=num('#gF');if(v>0&&v<ctx.sampleRate/2)gen.osc.frequency.setTargetAtTime(v,ctx.currentTime,0.01)}});
+$('#gCh').addEventListener('change',()=>{if(gen)startGen()});
+['#gF1','#gF2','#gDur','#gLoop'].forEach(s=>$(s).addEventListener('change',()=>{if(gen&&gType==='sweep')startGen()}));
+function stopGen(){if(!gen)return;const g=gen;gen=null;try{g.lvl.gain.setTargetAtTime(0,ctx.currentTime,0.01);setTimeout(()=>{try{g.src.stop()}catch(e){}g.lvl.disconnect()},80)}catch(e){}
+  $('#gPlay').textContent='LECTURE';$('#gPlay').className='btn pri grow';markTab('gen',false);keepAwake('gen',false)}
+async function startGen(){
+  await ensureCtx(); if(gen){const g=gen;gen=null;try{g.src.stop()}catch(e){}g.lvl.disconnect()}
+  const lvl=ctx.createGain(); lvl.gain.value=0; let src, osc=null;
+  if(gType==='sine'){osc=src=ctx.createOscillator();src.frequency.value=Math.min(num('#gF')||1000,ctx.sampleRate/2-1)}
+  else if(gType==='sweep'){
+    const f1=Math.max(1,num('#gF1')||20),f2=Math.min(ctx.sampleRate/2-1,num('#gF2')||20000),du=Math.max(0.1,num('#gDur')||4),loop=$('#gLoop').value==='1';
+    const sw=makeSweep(ctx.sampleRate,du,f1,f2), tail=loop?ctx.sampleRate:0, b=ctx.createBuffer(1,sw.length+tail,ctx.sampleRate);
+    b.getChannelData(0).set(sw); src=ctx.createBufferSource(); src.buffer=b; src.loop=loop;
+    src.onended=()=>{if(gen&&gen.src===src)stopGen()};
+  } else {src=ctx.createBufferSource();src.buffer=noiseBuf(gType);src.loop=true}
+  src.connect(lvl); route(lvl,$('#gCh').value); src.start();
+  lvl.gain.setTargetAtTime(dbToLin(+$('#gLvl').value),ctx.currentTime,0.02);
+  gen={src,lvl,osc};
+  $('#gPlay').textContent='STOP';$('#gPlay').className='btn on grow';markTab('gen',true);keepAwake('gen',true);
+}
+$('#gPlay').onclick=()=>gen?stopGen():startGen();
+
+/* ================= MICRO ================= */
+let micStream=null, micSrc=null;
+async function ensureMic(){
+  await ensureCtx();
+  if(micSrc)return micSrc;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('Micro indisponible dans ce contexte.');
+  micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1}});
+  micSrc=ctx.createMediaStreamSource(micStream);
+  return micSrc;
+}
+
+/* ================= ANALYSEUR ================= */
+let an=null, rtaOn=false, frozen=false, hold=false, peaks=null, fbuf=null, tbuf=null, raf=0, sgImg=null, LUT=null;
+const OCT=[25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
+segInit('#rMode',()=>{peaks=null});
+segInit('#rAvg',v=>{if(an)an.smoothingTimeConstant=+v});
+function buildLUT(){
+  LUT=new Uint8ClampedArray(256*3);
+  const stops=[[0,[12,14,17]],[0.35,[40,52,92]],[0.6,[150,70,60]],[0.82,[233,162,59]],[1,[255,245,220]]];
+  for(let i=0;i<256;i++){const t=i/255;let k=0;while(k<stops.length-2&&t>stops[k+1][0])k++;
+    const [t0,c0]=stops[k],[t1,c1]=stops[k+1],u=(t-t0)/(t1-t0);for(let j=0;j<3;j++)LUT[i*3+j]=c0[j]+(c1[j]-c0[j])*u}
+}
+$('#rRun').onclick=async()=>{
+  if(rtaOn){rtaOn=false;cancelAnimationFrame(raf);$('#rRun').textContent='DÉMARRER';$('#rRun').className='btn pri';$('#rFreeze').disabled=true;markTab('rta',false);keepAwake('rta',false);return}
+  try{const s=await ensureMic();
+    if(!an){an=ctx.createAnalyser();an.fftSize=8192;an.minDecibels=-140;an.maxDecibels=0;s.connect(an);fbuf=new Float32Array(an.frequencyBinCount);tbuf=new Float32Array(an.fftSize)}
+    an.smoothingTimeConstant=+segVal('#rAvg');
+    if(!LUT)buildLUT();
+    rtaOn=true;frozen=false;$('#rFreeze').disabled=false;$('#rFreeze').textContent='FIGER';$('#rRun').textContent='ARRÊTER';$('#rRun').className='btn on';markTab('rta',true);keepAwake('rta',true);
+    loop();
+  }catch(e){$('#rInfo').textContent=micErr(e)}
+};
+$('#rFreeze').onclick=()=>{frozen=!frozen;$('#rFreeze').textContent=frozen?'REPRENDRE':'FIGER'};
+$('#rHold').onclick=()=>{hold=!hold;peaks=null;$('#rHold').textContent='CRÊTES : '+(hold?'OUI':'NON')};
+function micErr(e){return (e&&e.name==='NotAllowedError')?'Accès au micro refusé. Autorisez-le dans les réglages.':(e&&e.message)||'Micro indisponible.'}
+const FMIN=20,FMAX=20000,LMIN=Math.log10(FMIN),LSPAN=Math.log10(FMAX)-LMIN;
+function loop(){
+  if(!rtaOn)return;
+  raf=requestAnimationFrame(loop);
+  if(curTab!=='rta'||frozen||document.hidden)return;
+  an.getFloatFrequencyData(fbuf); an.getFloatTimeDomainData(tbuf);
+  let s=0;for(let i=0;i<tbuf.length;i++)s+=tbuf[i]*tbuf[i];
+  const rms=10*Math.log10(s/tbuf.length+1e-20);
+  const sr=ctx.sampleRate,bw=sr/an.fftSize; let pk=Math.ceil(20/bw);for(let i=pk+1;i<fbuf.length;i++)if(fbuf[i]>fbuf[pk])pk=i;
+  $('#rInfo').textContent=f(rms,1)+' dBFS · pic '+(pk*bw>=1000?f(pk*bw/1000,2)+' k':f(pk*bw,0)+' ')+'Hz';
+  drawRTA(); drawSG();
+}
+function bandPower(lo,hi){const bw=ctx.sampleRate/an.fftSize;let p=0,k0=Math.max(1,Math.ceil(lo/bw)),k1=Math.min(fbuf.length-1,Math.floor(hi/bw));
+  if(k1<k0){k0=k1=Math.min(fbuf.length-1,Math.max(1,Math.round((lo+hi)/2/bw)))}
+  for(let k=k0;k<=k1;k++)p+=Math.pow(10,fbuf[k]/10);return 10*Math.log10(p+1e-20)}
+function drawRTA(){
+  const cv=$('#rCv'),{w,h,d}=fitCanvas(cv),g=cv.getContext('2d'),top=-10,bot=-120;
+  const xf=fq=>(Math.log10(fq)-LMIN)/LSPAN*w, yd=db=>(top-db)/(top-bot)*h;
+  g.clearRect(0,0,w,h); g.lineWidth=1; g.strokeStyle=css('--line'); g.fillStyle=css('--dim'); g.font=`${9*d}px ${css('--mono')}`;
+  [50,100,200,500,1000,2000,5000,10000].forEach(fq=>{const x=Math.round(xf(fq))+.5;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.fillText(fq>=1000?fq/1000+'k':fq,x+2*d,h-3*d)});
+  for(let db=-20;db>bot;db-=20){const y=Math.round(yd(db))+.5;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();g.fillText(db,2*d,y-2*d)}
+  const acc=css('--accent'), mode=segVal('#rMode'), bw=ctx.sampleRate/an.fftSize;
+  if(mode==='oct'){
+    const vals=OCT.map(c=>bandPower(c/Math.pow(2,1/6),c*Math.pow(2,1/6)));
+    if(hold){if(!peaks||peaks.length!==vals.length)peaks=vals.slice();else vals.forEach((v,i)=>peaks[i]=Math.max(v,peaks[i]-0.15))}
+    const n=OCT.length, bwpx=w/n;
+    vals.forEach((v,i)=>{const y=yd(v);g.fillStyle=acc;g.globalAlpha=.85;g.fillRect(i*bwpx+1*d,y,bwpx-2*d,h-y);g.globalAlpha=1;
+      if(hold&&peaks){g.fillStyle=css('--fg');g.fillRect(i*bwpx+1*d,yd(peaks[i]),bwpx-2*d,2*d)}});
+    return;
+  }
+  // FFT : max par colonne de pixels
+  const col=new Float32Array(w).fill(-200);
+  for(let k=1;k<fbuf.length;k++){const fq=k*bw;if(fq<FMIN||fq>FMAX)continue;const x=Math.floor(xf(fq));if(x>=0&&x<w&&fbuf[k]>col[x])col[x]=fbuf[k]}
+  let last=-200;for(let x=0;x<w;x++){if(col[x]<=-199)col[x]=last;else last=col[x]}
+  for(let x=w-1,nx=-200;x>=0;x--){if(col[x]<=-199)col[x]=nx;else nx=col[x]}
+  if(hold){if(!peaks||peaks.length!==w)peaks=Float32Array.from(col);else for(let x=0;x<w;x++)peaks[x]=Math.max(col[x],peaks[x]-0.15)}
+  g.beginPath();g.moveTo(0,h);for(let x=0;x<w;x++)g.lineTo(x,yd(col[x]));g.lineTo(w,h);g.closePath();
+  g.fillStyle=acc;g.globalAlpha=.14;g.fill();g.globalAlpha=1;
+  g.beginPath();for(let x=0;x<w;x++)x?g.lineTo(x,yd(col[x])):g.moveTo(x,yd(col[x]));g.strokeStyle=acc;g.lineWidth=1.5*d;g.stroke();
+  if(hold&&peaks){g.beginPath();for(let x=0;x<w;x++)x?g.lineTo(x,yd(peaks[x])):g.moveTo(x,yd(peaks[x]));g.strokeStyle=css('--fg');g.globalAlpha=.6;g.lineWidth=1*d;g.stroke();g.globalAlpha=1}
+}
+function drawSG(){
+  const cv=$('#sgCv'),{w,h}=fitCanvas(cv),g=cv.getContext('2d');
+  // décale d'un pixel vers la gauche, colonne neuve à droite (bas = graves)
+  g.drawImage(cv,1,0,w-1,h,0,0,w-1,h);
+  if(!sgImg||sgImg.height!==h)sgImg=g.createImageData(1,h);
+  const bw=ctx.sampleRate/an.fftSize, data=sgImg.data, lo=-115, hi=-25;
+  for(let y=0;y<h;y++){
+    const f0=Math.pow(10,LMIN+(1-(y+1)/h)*LSPAN), f1=Math.pow(10,LMIN+(1-y/h)*LSPAN);
+    let k0=Math.max(1,Math.floor(f0/bw)),k1=Math.max(k0,Math.min(fbuf.length-1,Math.ceil(f1/bw))),m=-200;
+    for(let k=k0;k<=k1;k++)if(fbuf[k]>m)m=fbuf[k];
+    const i=Math.max(0,Math.min(255,Math.round((m-lo)/(hi-lo)*255)));
+    data[y*4]=LUT[i*3];data[y*4+1]=LUT[i*3+1];data[y*4+2]=LUT[i*3+2];data[y*4+3]=255;
+  }
+  g.putImageData(sgImg,w-1,0);
+}
+
+/* ================= DÉLAIS ================= */
+let recNode=null, recWait=null, recBuf=null, recF0=0, recLen=0;
+const MEAS={A:null,B:null,AB:null}; let irZoom=false;
+async function ensureRec(){
+  const s=await ensureMic();
+  if(recNode)return recNode;
+  const code=`class R extends AudioWorkletProcessor{constructor(){super();this.a=-1;this.b=-1;this.port.onmessage=e=>{this.a=e.data.a;this.b=e.data.b}}
+  process(i){const ch=i[0]&&i[0][0];const f=currentFrame;if(this.b>0){if(ch&&f+ch.length>this.a&&f<this.b)this.port.postMessage({f,d:ch.slice(0)});if(f>=this.b){this.port.postMessage({done:1});this.a=this.b=-1}}return true}}
+  registerProcessor('regie-rec',R);`;
+  const url=URL.createObjectURL(new Blob([code],{type:'application/javascript'}));
+  await ctx.audioWorklet.addModule(url);
+  recNode=new AudioWorkletNode(ctx,'regie-rec',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[1]});
+  const sink=ctx.createGain();sink.gain.value=0;s.connect(recNode);recNode.connect(sink);sink.connect(ctx.destination);
+  recNode.port.onmessage=e=>{const m=e.data;if(m.done){recWait&&recWait();recWait=null;return}
+    const d=m.d,o=m.f-recF0;for(let j=0;j<d.length;j++){const k=o+j;if(k>=0&&k<recLen)recBuf[k]=d[j]}};
+  return recNode;
+}
+['#dLvl'].forEach(s=>$(s).addEventListener('input',e=>{const v=+e.target.value;$('#dLvlV').textContent=(v<0?'−':'')+Math.abs(v)+' dBFS'}));
+async function measure(which){
+  const btns=['#dA','#dB','#dAB'].map(s=>$(s)); btns.forEach(b=>b.disabled=true);
+  $('#dMsg').textContent='Mesure en cours…'; $('#dMsg').style.color='';
+  try{
+    if(!window.AudioWorkletNode)throw new Error('Enregistrement précis non disponible sur cet appareil.');
+    await ensureRec(); keepAwake('delai',true);
+    const sr=ctx.sampleRate, du=+$('#dDur').value, sweep=makeSweep(sr,du,20,Math.min(20000,sr/2*0.95));
+    const maxD=Math.max(5,num('#dMax')||120), win=Math.round(sr*(maxD/C()+0.6));
+    recLen=sweep.length+win; recBuf=new Float32Array(recLen);
+    const b=ctx.createBuffer(1,sweep.length,sr);b.getChannelData(0).set(sweep);
+    const src=ctx.createBufferSource();src.buffer=b;const lv=ctx.createGain();lv.gain.value=dbToLin(+$('#dLvl').value);src.connect(lv);route(lv,$('#dCh').value);
+    const T0=ctx.currentTime+0.3; recF0=Math.round(T0*sr);
+    const done=new Promise(r=>recWait=r);
+    recNode.port.postMessage({a:recF0,b:recF0+recLen});
+    src.start(T0);
+    const tm=setTimeout(()=>{recWait&&recWait()},(recLen/sr+2)*1000);
+    await done; clearTimeout(tm); lv.disconnect();
+    let pk=0;for(let i=0;i<recLen;i++)pk=Math.max(pk,Math.abs(recBuf[i]));
+    const h=deconv(recBuf,sweep);
+    const r=analyzeIR(h,sr,win,which==='AB');
+    if(!r)throw new Error('Aucune réponse détectée.');
+    MEAS[which]={h:h.subarray(0,win),sr,r,t:Date.now()};
+    if(which!=='AB')MEAS.AB=null; else {MEAS.A=MEAS.B=null}
+    let msg=`Rapport signal/bruit ${f(r.snr,0)} dB.`;
+    if(pk>0.98)msg+=' Saturation du micro : baissez le niveau.';
+    if(r.snr<20){msg+=' Mesure peu fiable : montez le niveau ou réduisez le bruit ambiant.';$('#dMsg').style.color='var(--bad)'}
+    $('#dMsg').textContent=msg;
+    showDelay(); drawIR();
+  }catch(e){$('#dMsg').textContent=micErr(e);$('#dMsg').style.color='var(--bad)'}
+  finally{btns.forEach(b=>b.disabled=false);keepAwake('delai',false)}
+}
+$('#dA').onclick=()=>measure('A'); $('#dB').onclick=()=>measure('B'); $('#dAB').onclick=()=>measure('AB');
+$('#dHaas').addEventListener('change',showDelay);
+$('#dZoom').onclick=()=>{irZoom=!irZoom;$('#dZoom').textContent='ZOOM : '+(irZoom?'ARRIVÉES':'TOUT');drawIR()};
+function arrivals(){
+  if(MEAS.AB){const {r,sr}=MEAS.AB;if(!r.p2)return {ta:r.p1.i/sr*1000};
+    const [e,l]=r.p1.i<r.p2.i?[r.p1,r.p2]:[r.p2,r.p1];
+    return {ta:e.i/sr*1000,tb:l.i/sr*1000,simul:true,rel:20*Math.log10(Math.min(r.p1.amp,r.p2.amp)/Math.max(r.p1.amp,r.p2.amp)),pol:e.sign!==l.sign}}
+  const o={};if(MEAS.A)o.ta=MEAS.A.r.p1.i/MEAS.A.sr*1000;if(MEAS.B)o.tb=MEAS.B.r.p1.i/MEAS.B.sr*1000;
+  if(MEAS.A&&MEAS.B)o.pol=MEAS.A.r.p1.sign!==MEAS.B.r.p1.sign;return o;
+}
+function showDelay(){
+  const a=arrivals(), c=C();
+  $('#dTa').textContent=a.ta!=null?f(a.ta,2)+' ms':'—';
+  $('#dTb').textContent=a.tb!=null?f(a.tb,2)+' ms':'—';
+  $('#dRes').querySelector('div:nth-child(1) span').textContent=a.simul?'1re arrivée':'Arrivée A';
+  $('#dRes').querySelector('div:nth-child(2) span').textContent=a.simul?'2e arrivée':'Arrivée B';
+  if(a.ta==null||a.tb==null){$('#dDt').textContent='—';$('#dDd').textContent='—';$('#dRec').textContent='—';
+    $('#dRecN').textContent=MEAS.AB?'Une seule arrivée détectée : les deux sources sont alignées à moins de 1 ms, ou l’une est trop faible.':'Mesurez A et B pour obtenir le délai à appliquer.';return}
+  const dt=a.tb-a.ta, haas=+$('#dHaas').value;
+  $('#dDt').textContent=(dt>0?'+':'')+f(dt,2)+' ms'; $('#dDd').textContent=f(Math.abs(dt)*c/1000,2)+' m';
+  let pol=a.pol?' Polarité opposée détectée entre les deux pics.':'';
+  if(a.simul){
+    $('#dRec').textContent='+'+f(dt+haas,2)+' ms';
+    $('#dRecN').textContent=`Retardez la source qui arrive en premier de ${f(dt,2)} ms${haas?` (+${haas} ms de précédence)`:''}. La 2e arrivée est ${f(-a.rel,1)} dB plus faible. Le mode simultané ne dit pas quelle source est laquelle : coupez-en une pour vérifier.`+pol;
+    return;
+  }
+  const dB=a.ta-a.tb+haas;
+  if(dB>=0){$('#dRec').textContent='B : +'+f(dB,2)+' ms';$('#dRecN').textContent=`Retardez B de ${f(dB,2)} ms pour qu’il arrive ${haas?haas+' ms après':'en même temps que'} A à ce point d’écoute.`+pol}
+  else{$('#dRec').textContent='A : +'+f(-dB,2)+' ms';$('#dRecN').textContent=`B arrive déjà après A. Retardez A de ${f(-dB,2)} ms pour l’aligner${haas?` (B gardera ${haas} ms de retard)`:''}, ou laissez tel quel.`+pol}
+}
+function drawIR(){
+  const cv=$('#dCv'); if(cv.offsetParent===null)return;
+  const {w,h,d}=fitCanvas(cv),g=cv.getContext('2d');g.clearRect(0,0,w,h);
+  const sets=[];if(MEAS.A)sets.push([MEAS.A,css('--accent')]);if(MEAS.B)sets.push([MEAS.B,css('--blue')]);if(MEAS.AB)sets.push([MEAS.AB,css('--accent')]);
+  g.fillStyle=css('--dim');g.font=`${9*d}px ${css('--mono')}`;
+  if(!sets.length){g.fillText('Aucune mesure',8*d,16*d);return}
+  const a=arrivals(), ts=[a.ta,a.tb].filter(x=>x!=null);
+  let t0=0,t1=Math.max(...sets.map(([m])=>m.h.length/m.sr*1000));
+  if(irZoom&&ts.length){const lo=Math.min(...ts),hi=Math.max(...ts);t0=Math.max(0,lo-10);t1=hi+25}
+  const X=t=>(t-t0)/(t1-t0)*w, Y=db=>(-db)/60*(h-14*d);
+  g.strokeStyle=css('--line');g.lineWidth=1;
+  const stp=[1,2,5,10,20,50,100,200,500].find(s=>(t1-t0)/s<=8)||1000;
+  for(let t=Math.ceil(t0/stp)*stp;t<=t1;t+=stp){const x=Math.round(X(t))+.5;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.fillText(t+' ms',x+2*d,h-3*d)}
+  sets.forEach(([m,col])=>{
+    const n=m.h.length, ref=m.r.p1.amp, i0=Math.max(0,Math.floor(t0/1000*m.sr)), i1=Math.min(n,Math.ceil(t1/1000*m.sr));
+    g.beginPath();g.strokeStyle=col;g.lineWidth=1*d;g.globalAlpha=sets.length>1?0.8:1;
+    const per=Math.max(1,(i1-i0)/w);
+    for(let x=0;x<w;x++){let mx=0;const s=Math.floor(i0+x*per),e=Math.min(i1,Math.floor(i0+(x+1)*per)+1);for(let i=s;i<e;i++){const v=Math.abs(m.h[i]);if(v>mx)mx=v}
+      const db=Math.max(-60,20*Math.log10(mx/ref+1e-9));x?g.lineTo(x,Y(db)):g.moveTo(x,Y(db))}
+    g.stroke();g.globalAlpha=1;
+  });
+  [[a.ta,MEAS.AB?'--fg':'--accent'],[a.tb,MEAS.AB?'--fg':'--blue']].forEach(([t,c])=>{if(t==null)return;const x=X(t);g.strokeStyle=css(c);g.setLineDash([3*d,3*d]);g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.setLineDash([])});
+}
+
+/* ---------- Init ---------- */
+function refreshAll(){calcSon();calcTrigo();calcArray();if(curTab==='array')drawArray();showDelay()}
+window.addEventListener('resize',()=>{if(curTab==='array')drawArray();if(curTab==='delai')drawIR()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&curTab==='heures')renderHeures()});
+setT(T);
+renderHeures();
+show(store.get('regie.tab','heures'));
+</script>
+
+</body></html>
