@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -12,6 +13,7 @@ import android.os.Vibrator
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -25,6 +27,7 @@ class MainActivity : Activity() {
 
     private lateinit var web: WebView
     private var pendingPermission: PermissionRequest? = null
+    private var fileCallback: ValueCallback<Array<Uri>>? = null
 
     // Servi en https://appassets.androidplatform.net : contexte sécurisé,
     // nécessaire pour le micro (getUserMedia) et l'AudioWorklet.
@@ -53,6 +56,21 @@ class MainActivity : Activity() {
                 assetLoader.shouldInterceptRequest(request.url)
         }
         web.webChromeClient = object : WebChromeClient() {
+            // Bouton « Importer » : ouvre le sélecteur de fichiers Android
+            override fun onShowFileChooser(view: WebView, callback: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
+                fileCallback?.onReceiveValue(null)
+                fileCallback = callback
+                val pick = Intent(Intent.ACTION_GET_CONTENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"
+                }
+                return try {
+                    startActivityForResult(Intent.createChooser(pick, "Importer un projet"), REQ_FILE); true
+                } catch (e: Exception) {
+                    fileCallback = null; false
+                }
+            }
+
             override fun onPermissionRequest(request: PermissionRequest) {
                 runOnUiThread {
                     if (PermissionRequest.RESOURCE_AUDIO_CAPTURE !in request.resources) {
@@ -82,6 +100,14 @@ class MainActivity : Activity() {
         else req.deny()
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQ_FILE) return
+        fileCallback?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
+        fileCallback = null
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         web.saveState(outState)
@@ -105,7 +131,7 @@ class MainActivity : Activity() {
                 putExtra(Intent.EXTRA_SUBJECT, name)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            runOnUiThread { startActivity(Intent.createChooser(send, "Exporter les heures")) }
+            runOnUiThread { startActivity(Intent.createChooser(send, "Exporter")) }
         }
 
         @JavascriptInterface
@@ -123,5 +149,8 @@ class MainActivity : Activity() {
         }
     }
 
-    companion object { private const val REQ_MIC = 42 }
+    companion object {
+        private const val REQ_MIC = 42
+        private const val REQ_FILE = 43
+    }
 }

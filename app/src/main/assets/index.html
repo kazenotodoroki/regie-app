@@ -91,9 +91,43 @@ canvas{display:block;width:100%;background:var(--bg);border:1px solid var(--line
 .ent .l{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ent .d{font-family:var(--mono)}
 .ent.live .d{color:var(--ok)}
-.edit .grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+#hList .edit .grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 .edit{background:var(--panel2);border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}
 textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px solid var(--line);font:12px var(--mono);padding:8px;border-radius:var(--r)}
+/* Mémorisation, projets, télémètre, analyseur */
+.ph small{margin-left:auto}
+.ph h2+.mem{margin-left:auto}
+.ph .mem{flex:0 0 auto}
+.kv div{cursor:pointer;-webkit-user-select:none;user-select:none}
+.kv div:active{background:var(--panel2)}
+#t-projet .kv div{cursor:default}
+.kv i{font:12px var(--mono);color:var(--dim);font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pjbar{display:flex;align-items:center;gap:10px;font:600 11px var(--sans);letter-spacing:.14em;color:var(--dim)}
+.pjbar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em;font-size:14px;color:var(--fg)}
+.list .it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);cursor:pointer;font-size:14px}
+.list .it:first-child{border-top:0}
+.list .it>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis}
+.list .it>span:last-child{text-align:right}
+.list .it.sel{background:var(--panel2);margin-inline:-12px;padding-inline:12px}
+.list .it .bad{color:var(--bad)}
+.list small{font-size:11px}
+.badge{font:600 10px var(--sans);letter-spacing:.1em;padding:2px 5px;border:1px solid currentColor;border-radius:1px;color:var(--dim);white-space:nowrap;min-width:38px;text-align:center}
+.badge.hp{color:var(--accent)} .badge.mic{color:var(--blue)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);cursor:pointer}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--accent);flex:0 0 auto}
+.meter{position:relative;height:8px;background:var(--bg);border:1px solid var(--line);margin-top:10px;border-radius:1px}
+.meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ok)}
+.meter s{position:absolute;top:-3px;bottom:-3px;width:2px;left:0;background:var(--fg);text-decoration:none}
+.meter.clip{border-color:var(--bad)} .meter.clip i{background:var(--bad)}
+.row4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.row4 .btn{padding:10px 2px;font-size:12px;letter-spacing:.06em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rinfo{font-size:11px;margin-top:6px}
+.pk{font-size:12px;color:var(--fg);margin:6px 0 0;min-height:1.4em}
+.edit table td{text-align:left}
+.edit .tscroll{background:var(--panel)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:14px;align-items:center;width:max-content;max-width:calc(100% - 32px);background:var(--panel2);border:1px solid var(--line);border-left:2px solid var(--accent);padding:10px 12px;font-size:13px;border-radius:var(--r);box-shadow:0 6px 20px rgba(0,0,0,.45)}
+.toast span{min-width:0}
+.toast button{background:none;border:0;color:var(--accent);font:600 12px var(--sans);letter-spacing:.1em;cursor:pointer;padding:4px;flex:0 0 auto}
 </style>
 
 <header>
@@ -104,6 +138,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
     </div>
     <nav id="tabs" role="tablist">
       <button data-t="heures">HEURES</button>
+      <button data-t="projet">PROJET</button>
       <button data-t="son">CÉLÉRITÉ</button>
       <button data-t="trigo">TÉLÉMÈTRE</button>
       <button data-t="array">LINE ARRAY</button>
@@ -144,7 +179,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
 
 <!-- ============ CÉLÉRITÉ ============ -->
 <section id="t-son" hidden>
-  <div class="panel">
+  <div class="panel" data-mem="Vitesse du son">
     <div class="ph"><h2>Vitesse du son</h2><small>c ≈ 331,3 + 0,606·T + 0,0124·HR</small></div>
     <div class="grid">
       <label class="f">Température °C<input id="sT" type="number" step="0.5" inputmode="decimal"></label>
@@ -156,7 +191,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
       <div><span>Par milliseconde</span><b id="sMMs"></b></div>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Distance ↔ délai">
     <div class="ph"><h2>Distance ↔ délai</h2></div>
     <div class="grid">
       <label class="f">Distance m<input id="sD" type="number" step="any" inputmode="decimal" value="30"></label>
@@ -164,14 +199,14 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
       <label class="f">Échantillons @48k<input id="sSmp" type="text" readonly></label>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Longueur d'onde">
     <div class="ph"><h2>Longueur d'onde</h2></div>
     <div class="grid"><label class="f">Fréquence Hz<input id="sF" type="number" step="any" inputmode="decimal" value="63"></label></div>
     <div class="kv" style="margin-top:10px">
       <div><span>λ</span><b id="sL"></b></div><div><span>λ / 2</span><b id="sL2"></b></div><div><span>λ / 4</span><b id="sL4"></b></div>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Dérive thermique d'un délai">
     <div class="ph"><h2>Dérive thermique d'un délai</h2><small>réglé à T1, joué à T2</small></div>
     <div class="grid">
       <label class="f">Distance m<input id="sdD" type="number" step="any" inputmode="decimal" value="60"></label>
@@ -182,7 +217,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
       <div><span>Délai à T1</span><b id="sd1"></b></div><div><span>Délai à T2</span><b id="sd2"></b></div><div><span>Écart</span><b id="sdX" class="acc"></b></div>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Table rapide">
     <div class="ph"><h2>Table rapide</h2><small id="sTabT"></small></div>
     <div class="tscroll"><table id="sTab"></table></div>
   </div>
@@ -190,42 +225,117 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
 
 <!-- ============ TÉLÉMÈTRE ============ -->
 <section id="t-trigo" hidden>
+  <div class="pjbar"><span class="dim">PROJET</span><b id="tPjName"></b><button class="btn sm" data-goto="projet">Changer</button></div>
+  <div class="panel" data-mem="Repère au sol">
+    <div class="ph"><h2>Repère au sol</h2><small>3 points A, B, C</small></div>
+    <p class="note" style="margin-top:0">Marquez trois points au sol, aussi écartés que possible et sans être alignés. Mesurez les trois côtés. Chaque position se calcule ensuite à partir de sa distance à A, B et C, sans inclinomètre.</p>
+    <div class="grid" style="margin-top:10px">
+      <label class="f">A–B m<input id="rAB" type="number" step="any" inputmode="decimal"></label>
+      <label class="f">A–C m<input id="rAC" type="number" step="any" inputmode="decimal"></label>
+      <label class="f">B–C m<input id="rBC" type="number" step="any" inputmode="decimal"></label>
+      <label class="f">Hauteur de mesure m<input id="rH0" type="number" step="any" inputmode="decimal" value="0"></label>
+    </div>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="rFlip"> C est à droite quand on regarde de A vers B</label>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Angle en A</span><b id="rAa"></b></div><div><span>Angle en B</span><b id="rAb"></b></div><div><span>Angle en C</span><b id="rAc"></b></div><div><span>Surface</span><b id="rS"></b></div>
+    </div>
+    <p class="warnmsg" id="rWarn" hidden></p>
+    <p class="note">Hauteur de mesure : 0 si le télémètre est posé sur chaque point, sinon la hauteur du trépied au-dessus des points.</p>
+  </div>
+
   <div class="panel">
-    <div class="ph"><h2>Visée simple</h2><small>distance laser + inclinaison</small></div>
+    <div class="ph"><h2>Points mesurés</h2><small id="tPtCount"></small></div>
+    <div class="list" id="tPts"></div>
+    <div class="edit" id="tPtForm">
+      <div class="dayh"><span id="tPtFormT">Nouveau point</span></div>
+      <div class="grid">
+        <label class="f">Nom<input id="pName" type="text" placeholder="ex. Line G" autocomplete="off"></label>
+        <label class="f">Type<select id="pType"><option value="hp">Enceinte</option><option value="mic">Micro / écoute</option><option value="autre">Autre</option></select></label>
+        <label class="f">Distance depuis A m<input id="pA" type="number" step="any" inputmode="decimal"></label>
+        <label class="f">Distance depuis B m<input id="pB" type="number" step="any" inputmode="decimal"></label>
+        <label class="f">Distance depuis C m<input id="pC" type="number" step="any" inputmode="decimal"></label>
+        <label class="f">Orienté vers<select id="pAim"></select></label>
+        <label class="f">Hauteur connue m<input id="pHk" type="number" step="any" inputmode="decimal" placeholder="facultatif"></label>
+      </div>
+      <label class="chk"><input type="checkbox" id="pBelow"> Point sous le plan de mesure</label>
+      <div class="kv">
+        <div><span>Hauteur</span><b id="pvH"></b></div><div><span>Précision</span><b id="pvS"></b></div><div><span>X · Y</span><b id="pvXY"></b></div>
+      </div>
+      <p class="warnmsg" id="pvWarn" hidden></p>
+      <div class="row"><button class="btn pri sm" id="pSave">Ajouter</button><button class="btn sm" id="pNew">Nouveau</button><div class="grow"></div><button class="btn warn sm" id="pDel" hidden>Supprimer</button></div>
+    </div>
+    <p class="note">Orienté vers : le point que vise l'enceinte ou le micro, pour les angles hors axe et d'incidence. La précision suppose ±1 cm par distance ; elle se dégrade quand le point est bas et loin des repères. Pour un micro sur pied, mesurez sa hauteur au mètre et saisissez-la : seule sa position au sol vient alors des distances.</p>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><h2>Vue 3D</h2><small>glisser · pincer</small></div>
+    <canvas id="tCv" style="height:320px;touch-action:none"></canvas>
+    <div class="row" style="margin-top:8px">
+      <div class="seg grow" id="tView"><button data-v="3d" aria-pressed="true">3D</button><button data-v="top">DESSUS</button><button data-v="front">FACE</button><button data-v="side">CÔTÉ</button></div>
+      <label class="chk"><input type="checkbox" id="tLegs" checked> Mesures</label>
+    </div>
+    <p class="note"><span style="color:var(--accent)">■</span> enceinte &nbsp;<span style="color:var(--blue)">●</span> micro &nbsp;<span>◆</span> autre. Les traits fins sont les distances mesurées depuis A, B et C ; la flèche indique l'orientation.</p>
+  </div>
+
+  <div class="panel" data-mem="Entre deux points">
+    <div class="ph"><h2>Entre deux points</h2></div>
     <div class="grid">
-      <label class="f">Distance mesurée m<input id="g1L" type="number" step="any" inputmode="decimal" value="32.4"></label>
-      <label class="f">Inclinaison °<input id="g1A" type="number" step="any" inputmode="decimal" value="12"></label>
-      <label class="f">Hauteur télémètre m<input id="g1H" type="number" step="any" inputmode="decimal" value="1.6"></label>
+      <label class="f">De (source)<select id="rlFrom"></select></label>
+      <label class="f">Vers (cible)<select id="rlTo"></select></label>
     </div>
     <div class="kv" style="margin-top:10px">
-      <div><span>Distance horiz.</span><b id="g1X" class="acc"></b></div><div><span>Dénivelé</span><b id="g1Y"></b></div><div><span>Hauteur du point</span><b id="g1Z"></b></div><div><span>Délai (oblique)</span><b id="g1T"></b></div>
+      <div><span>Distance</span><b id="rlL" class="acc"></b></div>
+      <div><span>Délai</span><b id="rlT"></b></div>
+      <div><span>Distance horiz.</span><b id="rlLh"></b></div>
+      <div><span>Dénivelé</span><b id="rlDz"></b></div>
+      <div><span>Site</span><b id="rlSite"></b></div>
+      <div><span>Azimut</span><b id="rlAz"></b></div>
+      <div><span>Hors axe de la source</span><b id="rlOffS"></b><i id="rlOffSi"></i></div>
+      <div><span>Incidence sur la cible</span><b id="rlOffT"></b><i id="rlOffTi"></i></div>
     </div>
+    <p class="note">Site : angle au-dessus (+) ou au-dessous (−) de l'horizontale. Azimut : depuis la direction A→B, en tournant vers C. Hors axe / incidence : écart entre l'orientation du point et la ligne vers l'autre point, détaillé en horizontal (H) et vertical (V).</p>
   </div>
-  <div class="panel">
-    <div class="ph"><h2>Hauteur d'un objet</h2><small>deux visées, haut et bas</small></div>
+
+  <div class="panel" data-mem="Délais vers un point">
+    <div class="ph"><h2>Délais vers un point</h2></div>
+    <div class="grid"><label class="f">Point d'écoute<select id="dtTo"></select></label></div>
+    <div class="tscroll" style="margin-top:10px"><table id="dtTab"></table></div>
+    <p class="note">Aligner : délai à ajouter à chaque enceinte pour qu'elle arrive en même temps que la plus lointaine à ce point. Ajoutez la précédence voulue (Haas) à la main.</p>
+  </div>
+
+  <div class="panel" data-mem="Triangle">
+    <div class="ph"><h2>Triangle 3 côtés</h2><small id="trMode">nouveau</small></div>
     <div class="grid">
-      <label class="f">Haut : distance m<input id="g2L1" type="number" step="any" inputmode="decimal" value="24.1"></label>
-      <label class="f">Haut : angle °<input id="g2A1" type="number" step="any" inputmode="decimal" value="28"></label>
-      <label class="f">Bas : distance m<input id="g2L2" type="number" step="any" inputmode="decimal" value="21.4"></label>
-      <label class="f">Bas : angle °<input id="g2A2" type="number" step="any" inputmode="decimal" value="-4"></label>
+      <label class="f">Nom<input id="trName" type="text" placeholder="ex. Couple ORTF" autocomplete="off"></label>
+      <label class="f">Côté a m<input id="trA" type="number" step="any" inputmode="decimal" value="5"></label>
+      <label class="f">Côté b m<input id="trB" type="number" step="any" inputmode="decimal" value="4"></label>
+      <label class="f">Côté c m<input id="trC" type="number" step="any" inputmode="decimal" value="3"></label>
+    </div>
+    <canvas id="trCv" style="height:160px;margin-top:10px"></canvas>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Angle A (face à a)</span><b id="trAl" class="acc"></b></div><div><span>Angle B (face à b)</span><b id="trBe"></b></div><div><span>Angle C (face à c)</span><b id="trGa"></b></div>
+      <div><span>Surface</span><b id="trS"></b></div><div><span>Hauteur sur a</span><b id="trH"></b></div>
+    </div>
+    <p class="warnmsg" id="trWarn" hidden></p>
+    <div class="row" style="margin-top:8px"><button class="btn pri sm" id="trSave">Enregistrer le triangle</button><button class="btn sm" id="trNew" hidden>Nouveau</button><div class="grow"></div><button class="btn warn sm" id="trDel" hidden>Supprimer</button></div>
+    <div class="list" id="trList" style="margin-top:8px"></div>
+  </div>
+
+  <div class="panel" data-mem="Hauteur d'un objet">
+    <div class="ph"><h2>Hauteur d'un objet</h2><small>sans inclinomètre</small></div>
+    <div class="grid">
+      <label class="f">Distance au sommet m<input id="hL" type="number" step="any" inputmode="decimal" value="12.8"></label>
+      <label class="f">Distance au pied m<input id="hD" type="number" step="any" inputmode="decimal" value="10.2"></label>
+      <label class="f">Hauteur du télémètre m<input id="hH0" type="number" step="any" inputmode="decimal" value="1.5"></label>
     </div>
     <div class="kv" style="margin-top:10px">
-      <div><span>Hauteur objet</span><b id="g2H" class="acc"></b></div><div><span>Distance horiz. haut</span><b id="g2X1"></b></div><div><span>Distance horiz. bas</span><b id="g2X2"></b></div>
+      <div><span>Hauteur de l'objet</span><b id="hHt" class="acc"></b></div><div><span>Distance horiz.</span><b id="hX"></b></div><div><span>Angle vers le sommet</span><b id="hAng"></b></div>
     </div>
+    <p class="warnmsg" id="hWarn" hidden></p>
+    <p class="note">Visez le sommet, puis le pied de l'objet au sol, depuis la même position. Le sommet doit être à la verticale du pied, sur un sol plat.</p>
   </div>
-  <div class="panel">
-    <div class="ph"><h2>Distance entre deux points</h2><small>depuis un même poste</small></div>
-    <div class="grid">
-      <label class="f">Point A : distance m<input id="g3A" type="number" step="any" inputmode="decimal" value="38"></label>
-      <label class="f">Point B : distance m<input id="g3B" type="number" step="any" inputmode="decimal" value="41"></label>
-      <label class="f">Angle entre A et B °<input id="g3G" type="number" step="any" inputmode="decimal" value="35"></label>
-    </div>
-    <div class="kv" style="margin-top:10px">
-      <div><span>Distance A–B</span><b id="g3D" class="acc"></b></div><div><span>Écart de parcours</span><b id="g3dd"></b></div><div><span>Écart de délai</span><b id="g3dt"></b></div>
-    </div>
-    <p class="note">L'écart de délai compare les trajets A→poste et B→poste : c'est le délai à appliquer pour aligner les deux sources sur ce poste.</p>
-  </div>
-  <div class="panel">
+
+  <div class="panel" data-mem="Angle de visée">
     <div class="ph"><h2>Angle de visée</h2><small>pour régler un site</small></div>
     <div class="grid">
       <label class="f">Dénivelé m<input id="g4H" type="number" step="any" inputmode="decimal" value="7.5"></label>
@@ -239,7 +349,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
 
 <!-- ============ LINE ARRAY ============ -->
 <section id="t-array" hidden>
-  <div class="panel">
+  <div class="panel" data-mem="Courbure de ligne">
     <div class="ph"><h2>Courbure de ligne</h2><small>vue de profil</small></div>
     <div class="grid">
       <label class="f">Haut du système m<input id="aH" type="number" step="any" inputmode="decimal" value="10"></label>
@@ -259,7 +369,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
     <div class="tscroll" style="margin-top:10px"><table id="aTab"></table></div>
     <p class="note">Visée progressive : les enceintes du haut couvrent le fond avec des petits angles, celles du bas ouvrent sur le premier rang. Les angles sont arrondis au pas choisi ; vérifiez les valeurs disponibles sur le système et validez au logiciel constructeur.</p>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Champ proche / lointain">
     <div class="ph"><h2>Champ proche / lointain</h2><small>formule de Heil</small></div>
     <div class="grid"><label class="f">Fréquence Hz<input id="aF" type="number" step="any" inputmode="decimal" value="1000"></label></div>
     <div class="kv" style="margin-top:10px">
@@ -267,7 +377,7 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
     </div>
     <p class="note">Jusqu'à la transition l'atténuation suit ≈ −3 dB par doublement de distance (onde cylindrique), au-delà −6 dB. Hauteur de ligne = nb d'enceintes × hauteur.</p>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Subs end-fire / cardio">
     <div class="ph"><h2>Subs end-fire / cardio</h2></div>
     <div class="grid"><label class="f">Espacement entre rangs m<input id="aSp" type="number" step="any" inputmode="decimal" value="1.0"></label></div>
     <div class="kv" style="margin-top:10px">
@@ -303,19 +413,40 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
 <!-- ============ ANALYSEUR ============ -->
 <section id="t-rta" hidden>
   <div class="panel">
-    <div class="row">
+    <div class="row4">
       <button class="btn pri" id="rRun">DÉMARRER</button>
       <button class="btn" id="rFreeze" disabled>FIGER</button>
-      <button class="btn" id="rHold">CRÊTES : NON</button>
+      <button class="btn" id="rAvgBtn" disabled>MOYENNE</button>
+      <button class="btn" id="rHold">CRÊTES</button>
+    </div>
+    <div class="meter" id="rMeter"><i id="rMRms"></i><s id="rMPk"></s></div>
+    <div class="mono dim rinfo" id="rInfo">Micro arrêté</div>
+    <div class="grid" style="margin-top:10px">
+      <label class="f">Affichage<select id="rMode"><option value="fft">FFT</option><option value="oct">1/3 d'octave</option></select></label>
+      <label class="f">Lissage<select id="rSmooth"><option value="0">Aucun</option><option value="48">1/48 oct</option><option value="24">1/24 oct</option><option value="12" selected>1/12 oct</option><option value="6">1/6 oct</option><option value="3">1/3 oct</option></select></label>
+      <label class="f">Pondération<select id="rW"><option value="Z">Z (aucune)</option><option value="A">A</option><option value="C">C</option></select></label>
+      <label class="f">Résolution FFT<select id="rFft"><option value="4096">4 096</option><option value="8192">8 192</option><option value="16384" selected>16 384</option><option value="32768">32 768</option></select></label>
+      <label class="f">Réactivité<select id="rAvg"><option value="0.5">Rapide</option><option value="0.8" selected>Moyenne</option><option value="0.93">Lente</option></select></label>
+    </div>
+    <canvas id="rCv" style="height:250px;margin-top:10px;touch-action:pan-y"></canvas>
+    <p class="mono pk" id="rPeaks"></p>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sm" id="rRef">CAPTURER RÉF.</button>
+      <button class="btn sm" id="rRefClr" hidden>EFFACER RÉF.</button>
       <div class="grow"></div>
-      <div class="mono dim" id="rInfo">—</div>
+      <button class="btn sm" id="rSave">ENVOYER AU PROJET</button>
     </div>
-    <div class="row" style="margin-top:10px">
-      <div class="seg grow" id="rMode"><button data-v="fft" aria-pressed="true">FFT</button><button data-v="oct">1/3 OCT</button></div>
-      <div class="seg grow" id="rAvg"><button data-v="0.5">RAPIDE</button><button data-v="0.8" aria-pressed="true">MOYEN</button><button data-v="0.93">LENT</button></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Spectrogramme</h2><small id="sgInfo"></small></div>
+    <canvas id="sgCv" style="height:270px;touch-action:pan-y"></canvas>
+    <div class="grid" style="margin-top:10px">
+      <label class="f">Défilement<select id="sgSpan"><option value="5">5 s</option><option value="10" selected>10 s</option><option value="20">20 s</option><option value="60">60 s</option></select></label>
+      <label class="f">Échelle<select id="sgScale"><option value="log">Logarithmique</option><option value="lin">Linéaire</option></select></label>
+      <label class="f">Plafond <span class="mono" id="sgHiV"></span><input type="range" id="sgHi" min="-80" max="0" step="5" value="-30"></label>
+      <label class="f">Dynamique <span class="mono" id="sgDynV"></span><input type="range" id="sgDyn" min="30" max="120" step="5" value="80"></label>
     </div>
-    <canvas id="rCv" style="height:220px;margin-top:10px"></canvas>
-    <canvas id="sgCv" style="height:200px;margin-top:6px"></canvas>
+    <p class="note">Touchez un graphique pour lire fréquence, note et niveau ; double-touchez pour effacer le curseur. MOYENNE accumule le spectre en continu (bruit rose, mesure de salle) jusqu'à ce qu'on la relâche.</p>
     <p class="note">Niveaux en dBFS relatifs au micro du téléphone (non calibré). Le micro est ouvert sans traitement (annulation d'écho, réduction de bruit et gain automatique désactivés quand l'appareil le permet).</p>
   </div>
 </section>
@@ -350,14 +481,52 @@ textarea{width:100%;height:160px;background:var(--bg);color:var(--fg);border:1px
     <div><span>Δ B − A</span><b id="dDt" class="acc">—</b></div>
     <div><span>Écart en distance</span><b id="dDd">—</b></div>
   </div>
-  <div class="panel">
+  <div class="panel" data-mem="Délai mesuré" data-mem-extra="#dRes">
     <div class="ph"><h2>Réglage conseillé</h2></div>
-    <div class="big" style="font-size:30px" id="dRec">—</div>
-    <p class="note" id="dRecN">Mesurez A et B pour obtenir le délai à appliquer.</p>
+    <div class="big" style="font-size:30px" id="dRec" data-out="Réglage conseillé">—</div>
+    <p class="note" id="dRecN" data-out="Détail">Mesurez A et B pour obtenir le délai à appliquer.</p>
+  </div>
+</section>
+
+<!-- ============ PROJET ============ -->
+<section id="t-projet" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Projet de mesures</h2><small id="pjMod"></small></div>
+    <div class="row"><select id="pjSel" class="grow"></select><button class="btn sm" id="pjNew">+ Nouveau</button></div>
+    <div class="grid" style="margin-top:10px"><label class="f">Nom du projet<input id="pjName" type="text" autocomplete="off"></label></div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>Points</span><b id="pjNPt"></b></div><div><span>Triangles</span><b id="pjNTr"></b></div><div><span>Valeurs</span><b id="pjNIt"></b></div><div><span>Courbes</span><b id="pjNCv"></b></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn pri grow" id="pjExpJson">Exporter JSON</button>
+      <button class="btn grow" id="pjExpCsv">Exporter CSV</button>
+      <label class="btn grow" for="pjImp" style="text-align:center">Importer</label>
+    </div>
+    <input type="file" id="pjImp" accept=".json,application/json,text/plain" hidden>
+    <div id="pjOut" hidden style="margin-top:10px">
+      <div class="row"><span class="mono dim grow" id="pjOutName"></span><button class="btn sm" id="pjCopy">Copier</button><button class="btn sm" id="pjOutClose">Fermer</button></div>
+      <textarea id="pjText" readonly style="margin-top:6px"></textarea>
+    </div>
+    <p class="note">JSON : le projet complet, à réimporter sur un autre téléphone. CSV : un tableau lisible dans Excel (repère, points, distances, triangles, valeurs, courbes).</p>
+    <p class="note">Pour remplir le projet : touchez n'importe quelle valeur de l'app pour la mémoriser seule, ou MÉM. pour garder tout le bloc de calcul.</p>
+    <div class="row" style="margin-top:6px"><div class="grow"></div><button class="btn warn sm" id="pjDel">Supprimer le projet</button></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Points</h2><button class="btn sm" data-goto="trigo">Ouvrir le télémètre</button></div>
+    <div class="tscroll"><table id="pjPts"></table></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Triangles</h2></div>
+    <div class="list" id="pjTris"></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Valeurs mémorisées</h2></div>
+    <div class="list" id="pjItems"></div>
   </div>
 </section>
 
 </main>
+<div class="toast" id="toast" hidden></div>
 
 <script>
 /*DSP-START*/
@@ -433,6 +602,51 @@ function analyzeIR(h,sr,winSamples,two){
   return res;
 }
 /*DSP-END*/
+/*GEO-START*/
+const R2D=180/Math.PI;
+const vsub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], vlen=v=>Math.hypot(v[0],v[1],v[2]), vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+// Repère : A à l'origine, B sur +x, C dans le plan z=0 (côté +y, ou −y si flip)
+function refFrame(AB,AC,BC,flip){
+  if(!(AB>0&&AC>0&&BC>0))return null;
+  const i=(AC*AC-BC*BC+AB*AB)/(2*AB), j2=AC*AC-i*i;
+  if(!(j2>1e-6))return null;
+  const j=Math.sqrt(j2)*(flip?-1:1);
+  return {A:[0,0,0],B:[AB,0,0],C:[i,j,0],d:AB,i,j};
+}
+// Trilatération : position d'un point à partir de ses distances à A, B, C
+function trilat(R,r1,r2,r3,below){
+  const x=(r1*r1-r2*r2+R.d*R.d)/(2*R.d);
+  const y=(r1*r1-r3*r3+R.i*R.i+R.j*R.j-2*R.i*x)/(2*R.j);
+  const z2=r1*r1-x*x-y*y;
+  return {p:[x,y,Math.sqrt(Math.max(0,z2))*(below?-1:1)],z2};
+}
+// Incertitude sur la hauteur pour une erreur s sur chaque distance
+function zSigma(R,r,below,s){
+  const b=trilat(R,r[0],r[1],r[2],below); if(b.z2<=1e-6)return Infinity;
+  let acc=0;
+  for(let k=0;k<3;k++){const q=r.slice();q[k]+=1e-4;const t=trilat(R,q[0],q[1],q[2],below);acc+=Math.pow((t.p[2]-b.p[2])/1e-4,2)}
+  return Math.sqrt(acc)*s;
+}
+function triSolve(a,b,c){
+  if(!(a>0&&b>0&&c>0)||a+b<=c||a+c<=b||b+c<=a)return null;
+  const al=Math.acos(Math.max(-1,Math.min(1,(b*b+c*c-a*a)/(2*b*c)))), be=Math.acos(Math.max(-1,Math.min(1,(a*a+c*c-b*b)/(2*a*c))));
+  const s=(a+b+c)/2, S=Math.sqrt(Math.max(0,s*(s-a)*(s-b)*(s-c)));
+  return {al,be,ga:Math.PI-al-be,S,ha:2*S/a};
+}
+function relation(P,Q,c){
+  const d=vsub(Q,P), L=vlen(d), Lh=Math.hypot(d[0],d[1]);
+  return {L,Lh,dz:d[2],site:Math.atan2(d[2],Lh)*R2D,az:Math.atan2(d[1],d[0])*R2D,t:L/c*1000};
+}
+// Angle entre l'axe P→X et la ligne P→Q, total et décomposé (horizontal / vertical)
+function offAxis(P,X,Q){
+  const a=vsub(X,P), b=vsub(Q,P), la=vlen(a), lb=vlen(b);
+  if(!(la>0&&lb>0))return null;
+  const tot=Math.acos(Math.max(-1,Math.min(1,vdot(a,b)/(la*lb))))*R2D;
+  let h=(Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0]))*R2D; h=((h%360)+540)%360-180;
+  const v=(Math.atan2(b[2],Math.hypot(b[0],b[1]))-Math.atan2(a[2],Math.hypot(a[0],a[1])))*R2D;
+  return {tot,h,v};
+}
+/*GEO-END*/
 </script>
 
 <script>
@@ -462,6 +676,9 @@ function show(t){
   store.set('regie.tab',t);
   if(t==='array')drawArray();
   if(t==='delai')drawIR();
+  if(t==='trigo'){drawScene();calcTri()}
+  if(t==='rta'){RA.dirty=true;drawRTA();drawSG(0,false)}
+  if(t==='projet')renderProjet();
 }
 tabs.forEach(b=>b.onclick=()=>show(b.dataset.t));
 function segInit(id,cb){const s=$(id);s.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
@@ -470,6 +687,225 @@ function segVal(id){const b=$(id+' button[aria-pressed="true"]');return b?b.data
 function fitCanvas(cv){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;const w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}return {w,h,d}}
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ================= PROJETS ================= */
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function blankPj(name){return {id:uid(),name:name||'Nouveau projet',created:Date.now(),mod:Date.now(),ref:{AB:null,AC:null,BC:null,h0:0,flip:false},points:[],tris:[],items:[],ui:{}}}
+function examplePj(){
+  const p=blankPj('Exemple : façade festival');
+  p.ref={AB:10,AC:8.54,BC:10.63,h0:0,flip:false};
+  const P=(name,type,dA,dB,dC)=>({id:uid(),name,type,dA,dB,dC,aim:null,below:false});
+  const lg=P('Line G','hp',27.50,30.59,20.90), ld=P('Line D','hp',30.59,27.50,22.56), ff=P('Front-fill','hp',22.58,22.58,14.18),
+        foh=P('Micro FOH','mic',6.60,6.60,4.75), r1=P('Rang 1','mic',19.68,19.68,11.24);
+  lg.aim=foh.id; ld.aim=foh.id; ff.aim=r1.id; r1.hk=1.2;
+  p.points=[lg,ld,ff,foh,r1];
+  p.tris=[{id:uid(),name:'Exemple : couple stéréo',a:0.3,b:0.62,c:0.62}];
+  p.ui={from:lg.id,to:foh.id,dt:r1.id};
+  return p;
+}
+function normPj(o){
+  if(!o||typeof o!=='object')throw new Error('format');
+  const p=blankPj(String(o.name||'Projet importé'));
+  const n=v=>{v=parseFloat(v);return isFinite(v)?v:null};
+  const r=o.ref||{}; p.ref={AB:n(r.AB),AC:n(r.AC),BC:n(r.BC),h0:n(r.h0)||0,flip:!!r.flip};
+  p.points=(Array.isArray(o.points)?o.points:[]).map(q=>({id:String(q.id||uid()),name:String(q.name||'Point'),type:['hp','mic','autre'].includes(q.type)?q.type:'autre',dA:n(q.dA),dB:n(q.dB),dC:n(q.dC),aim:q.aim?String(q.aim):null,below:!!q.below,hk:n(q.hk),note:q.note?String(q.note):''}));
+  p.tris=(Array.isArray(o.tris)?o.tris:[]).map(t=>({id:String(t.id||uid()),name:String(t.name||'Triangle'),a:n(t.a),b:n(t.b),c:n(t.c),note:t.note?String(t.note):''}));
+  p.items=(Array.isArray(o.items)?o.items:[]).filter(i=>i&&['val','calc','curve'].includes(i.kind)).map(i=>({...i,id:String(i.id||uid())}));
+  p.created=n(o.created)||Date.now(); p.ui=o.ui&&typeof o.ui==='object'?o.ui:{};
+  return p;
+}
+let PJ=store.get('regie.projets',null);
+if(!PJ||!Array.isArray(PJ.list)||!PJ.list.length){const e=examplePj();PJ={cur:e.id,list:[e]}}
+const proj=()=>PJ.list.find(p=>p.id===PJ.cur)||PJ.list[0];
+function saveP(){proj().mod=Date.now();store.set('regie.projets',PJ)}
+function addItem(it){const p=proj();it.id=uid();it.t=Date.now();p.items.push(it);saveP();if(curTab==='projet')renderProjet();else renderPjCounts();return it}
+function removeItem(id){const p=proj();p.items=p.items.filter(i=>i.id!==id);saveP();renderProjet()}
+function switchPj(id){if(id)PJ.cur=id;store.set('regie.projets',PJ);pjOpen=null;pjDel=false;loadTrigo();renderTrigo();renderTriList();renderProjet()}
+
+/* ---------- Mémorisation ---------- */
+let toastTm=0;
+function toast(msg,undo){
+  const el=$('#toast'); el.innerHTML='';
+  const s=document.createElement('span'); s.textContent=msg; el.append(s);
+  if(undo){const b=document.createElement('button');b.textContent='ANNULER';b.onclick=()=>{undo();el.hidden=true};el.append(b)}
+  el.hidden=false; clearTimeout(toastTm); toastTm=setTimeout(()=>el.hidden=true,4000);
+}
+function panelTitle(el){
+  const m=el.closest('[data-mem]'); if(m)return m.dataset.mem;
+  const pn=el.closest('.panel'), h=pn&&pn.querySelector('.ph h2'); if(h)return h.textContent.trim();
+  const s=el.closest('main>section'), b=s&&$(`#tabs button[data-t="${s.id.slice(2)}"]`);
+  return b?b.textContent.trim():'';
+}
+const tileVal=t=>[t.querySelector('span').textContent.trim(),[...t.querySelectorAll('b,i')].map(x=>x.textContent.trim()).filter(Boolean).join(' · ')];
+function labelText(lb){let s='';for(const n of lb.childNodes)if(n.nodeType===3)s+=n.textContent;return s.trim()}
+function fieldVal(el){if(el.tagName==='SELECT')return el.selectedIndex>=0?el.options[el.selectedIndex].text:'';if(el.type==='checkbox')return el.checked?'oui':'non';return el.value}
+document.addEventListener('click',e=>{
+  const go=e.target.closest('[data-goto]'); if(go){show(go.dataset.goto);window.scrollTo(0,0);return}
+  const t=e.target.closest('.kv>div'); if(!t||t.closest('#t-projet')||!t.querySelector('span')||!t.querySelector('b'))return;
+  const [l,v]=tileVal(t); if(!v||v==='—')return;
+  const it=addItem({kind:'val',title:panelTitle(t),label:l,value:v});
+  toast(`Mémorisé : ${l} = ${v}`,()=>removeItem(it.id));
+});
+function memPanel(p){
+  const inputs=[];
+  p.querySelectorAll('label.f').forEach(lb=>{if(lb.closest('.edit'))return;const el=lb.querySelector('input,select');if(!el)return;const v=fieldVal(el);if(v!=='')inputs.push([labelText(lb),v])});
+  p.querySelectorAll('label.chk').forEach(lb=>{if(lb.closest('.edit'))return;const el=lb.querySelector('input');if(el)inputs.push([labelText(lb),fieldVal(el)])});
+  const tiles=[...p.querySelectorAll('.kv>div')].filter(t=>!t.closest('.edit'));
+  if(p.dataset.memExtra)tiles.push(...$$(p.dataset.memExtra+'>div'));
+  const outputs=[];
+  tiles.forEach(t=>{const [l,v]=tileVal(t);if(v&&v!=='—')outputs.push([l,v])});
+  p.querySelectorAll('[data-out]').forEach(x=>{const v=x.textContent.trim();if(v&&v!=='—')outputs.push([x.dataset.out,v])});
+  const rows=[...p.querySelectorAll('table tr')].map(tr=>[...tr.children].map(c=>c.textContent.trim()));
+  if(!outputs.length&&!rows.length&&!inputs.length){toast('Rien à mémoriser : complétez d’abord le calcul.');return}
+  const it=addItem({kind:'calc',title:p.dataset.mem,inputs,outputs,rows:rows.length?rows:undefined});
+  toast(`Mémorisé : ${p.dataset.mem}`,()=>removeItem(it.id));
+}
+function initMem(){
+  $$('[data-mem]').forEach(p=>{
+    const ph=p.querySelector('.ph'); if(!ph||ph.querySelector('.mem'))return;
+    const b=document.createElement('button'); b.className='btn sm mem'; b.textContent='MÉM.'; b.title='Mémoriser ce bloc dans le projet';
+    b.onclick=e=>{e.stopPropagation();memPanel(p)}; ph.appendChild(b);
+  });
+}
+
+/* ---------- Onglet projet ---------- */
+let pjOpen=null, pjDel=false, pjItDel=false;
+const fmtD=ms=>new Date(ms).toLocaleString('fr-CH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const TYPES={hp:'HP',mic:'MIC',autre:'AUTRE'};
+function renderPjCounts(){
+  const p=proj();
+  $('#pjNPt').textContent=p.points.length; $('#pjNTr').textContent=p.tris.length;
+  $('#pjNIt').textContent=p.items.filter(i=>i.kind!=='curve').length; $('#pjNCv').textContent=p.items.filter(i=>i.kind==='curve').length;
+}
+function itemSummary(i){
+  if(i.kind==='val')return `${i.label} = ${i.value}`;
+  if(i.kind==='curve')return `${i.bands.length} bandes de 1/3 d'octave`;
+  return (i.outputs||[]).slice(0,2).map(o=>`${o[0]} ${o[1]}`).join(' · ')||((i.rows||[]).length+' lignes');
+}
+function renderProjet(){
+  const p=proj();
+  $('#pjSel').innerHTML=PJ.list.map(x=>`<option value="${x.id}"${x.id===p.id?' selected':''}>${esc(x.name)}</option>`).join('');
+  if(document.activeElement!==$('#pjName'))$('#pjName').value=p.name;
+  $('#pjMod').textContent='modifié le '+fmtD(p.mod);
+  $('#pjDel').textContent=pjDel?'Confirmer : supprimer « '+p.name+' »':'Supprimer le projet';
+  $('#tPjName').textContent=p.name;
+  renderPjCounts();
+  const S=scene(p);
+  const byId=Object.fromEntries(p.points.map(q=>[q.id,q]));
+  $('#pjPts').innerHTML=p.points.length?'<tr><th>Nom</th><th>Type</th><th>X</th><th>Y</th><th>Hauteur</th><th>Orienté vers</th></tr>'+p.points.map(q=>{
+    const s=S.pts.find(x=>x.id===q.id);
+    return `<tr><td>${esc(q.name)}</td><td>${TYPES[q.type]}</td><td>${s?f(s.p[0],2):'—'}</td><td>${s?f(s.p[1],2):'—'}</td><td>${s?f(s.h,2)+' m':'—'}</td><td>${q.aim&&byId[q.aim]?esc(byId[q.aim].name):''}</td></tr>`}).join('')
+    :'<tr><td class="dim" style="text-align:left">Aucun point. Mesurez un repère et des points dans l’onglet Télémètre.</td></tr>';
+  $('#pjTris').innerHTML=p.tris.length?p.tris.map(t=>{const s=triSolve(t.a,t.b,t.c);
+    return `<div class="it" data-tri="${t.id}"><span class="badge">TRI</span><span>${esc(t.name)}<br><small class="dim mono">a ${f(t.a,2)} · b ${f(t.b,2)} · c ${f(t.c,2)} m${s?` — ${f(s.al*R2D,1)}° / ${f(s.be*R2D,1)}° / ${f(s.ga*R2D,1)}°`:''}</small></span><button class="btn sm" data-trexp="${t.id}">Exporter</button></div>`}).join('')
+    :'<p class="note">Aucun triangle. Enregistrez-en depuis l’onglet Télémètre.</p>';
+  const items=[...p.items].reverse();
+  $('#pjItems').innerHTML=items.length?items.map(i=>{
+    const badge=i.kind==='val'?'VAL':i.kind==='curve'?'COURBE':'CALCUL';
+    let h=`<div class="it" data-it="${i.id}"><span class="mono dim">${fmtD(i.t)}</span><span><b>${esc(i.title||'')}</b><br><small class="dim">${esc(itemSummary(i))}</small></span><span class="badge">${badge}</span></div>`;
+    if(pjOpen===i.id){
+      h+='<div class="edit">';
+      if(i.kind==='calc'){
+        const kv=[...(i.inputs||[]).map(x=>['↳ '+x[0],x[1]]),...(i.outputs||[])];
+        if(kv.length)h+='<div class="tscroll"><table>'+kv.map(x=>`<tr><td>${esc(x[0])}</td><td>${esc(x[1])}</td></tr>`).join('')+'</table></div>';
+        if(i.rows)h+='<div class="tscroll"><table>'+i.rows.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('')+'</table></div>';
+      }
+      if(i.kind==='curve')h+='<canvas class="mini" id="itCv" style="height:110px"></canvas>';
+      h+=`<label class="f">Note<input type="text" id="itNote" value="${esc(i.note||'')}" autocomplete="off"></label>
+        <div class="row"><button class="btn sm" data-a="exp">Exporter</button><button class="btn sm" data-a="close">Fermer</button><div class="grow"></div><button class="btn warn sm" data-a="del">${pjItDel?'Confirmer la suppression':'Supprimer'}</button></div></div>`;
+    }
+    return h;
+  }).join(''):'<p class="note">Rien de mémorisé pour l’instant.</p>';
+  const cvi=$('#itCv'); if(cvi){const i=p.items.find(x=>x.id===pjOpen);if(i)drawMiniCurve(cvi,i.bands)}
+}
+function drawMiniCurve(cv,bands){
+  const {w,h,d}=fitCanvas(cv),g=cv.getContext('2d');g.clearRect(0,0,w,h);
+  const v=bands.filter(isFinite), hi=Math.ceil(Math.max(...v)/10)*10, lo=hi-60, bw=w/bands.length;
+  g.fillStyle=css('--accent');
+  bands.forEach((b,k)=>{const y=clamp((hi-b)/(hi-lo),0,1)*(h-12*d);g.fillRect(k*bw+1,y,bw-2,h-12*d-y)});
+  g.fillStyle=css('--dim');g.font=`${9*d}px ${css('--mono')}`;g.textAlign='left';g.fillText(hi+' dB',3*d,10*d);
+  [[3,'50'],[9,'200'],[16,'1k'],[23,'5k'],[27,'12k']].forEach(([k,t])=>g.fillText(t,k*bw,h-2*d));
+}
+$('#pjSel').addEventListener('change',e=>switchPj(e.target.value));
+$('#pjNew').onclick=()=>{const p=blankPj('Projet '+(PJ.list.length+1));PJ.list.push(p);switchPj(p.id);$('#pjName').focus();$('#pjName').select()};
+$('#pjName').addEventListener('input',e=>{proj().name=e.target.value||'Sans nom';saveP();$('#pjSel').selectedOptions[0].textContent=proj().name;$('#tPjName').textContent=proj().name});
+$('#pjDel').onclick=()=>{
+  if(!pjDel){pjDel=true;renderProjet();return}
+  PJ.list=PJ.list.filter(x=>x.id!==PJ.cur); if(!PJ.list.length)PJ.list.push(blankPj('Projet 1'));
+  pjDel=false; switchPj(PJ.list[0].id); toast('Projet supprimé.');
+};
+$('#pjItems').addEventListener('click',e=>{
+  const row=e.target.closest('.it'); if(row){pjOpen=pjOpen===row.dataset.it?null:row.dataset.it;pjItDel=false;renderProjet();return}
+  const b=e.target.closest('button[data-a]'); if(!b)return;
+  const p=proj(), i=p.items.find(x=>x.id===pjOpen); if(!i)return;
+  if(b.dataset.a==='close'){pjOpen=null}
+  if(b.dataset.a==='exp'){shareOut(slug(p.name)+'_'+slug(i.title)+'.txt','text/plain',itemText(i));return}
+  if(b.dataset.a==='del'){if(!pjItDel){pjItDel=true;renderProjet();return}p.items=p.items.filter(x=>x!==i);pjOpen=null;pjItDel=false;saveP()}
+  renderProjet();
+});
+$('#pjItems').addEventListener('input',e=>{if(e.target.id!=='itNote')return;const i=proj().items.find(x=>x.id===pjOpen);if(i){i.note=e.target.value;saveP()}});
+$('#pjTris').addEventListener('click',e=>{
+  const b=e.target.closest('[data-trexp]'); if(!b)return;
+  const t=proj().tris.find(x=>x.id===b.dataset.trexp); if(t)shareOut(slug(t.name)+'.txt','text/plain',triText(t));
+});
+
+/* ---------- Export / import ---------- */
+function slug(s){return String(s||'projet').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40)||'projet'}
+function shareOut(name,mime,content){
+  if(Android&&Android.shareFile){Android.shareFile(name,mime,content);return}
+  show('projet'); $('#pjOutName').textContent=name; $('#pjText').value=content; $('#pjOut').hidden=false;
+  $('#pjOut').scrollIntoView({block:'nearest'}); $('#pjText').select();
+}
+$('#pjCopy').onclick=()=>{const t=$('#pjText');try{navigator.clipboard.writeText(t.value).then(()=>toast('Copié.'),()=>{t.select();toast('Sélectionnez le texte puis copiez-le.')})}catch(e){t.select()}};
+$('#pjOutClose').onclick=()=>{$('#pjOut').hidden=true};
+const nf=(x,d=2)=>x!=null&&isFinite(x)?Number(x).toFixed(d).replace('.',','):'';
+const csvCell=s=>{s=String(s??'');return /[;"\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+function triText(t){const s=triSolve(t.a,t.b,t.c);return [`Triangle : ${t.name}`,`a = ${nf(t.a)} m · b = ${nf(t.b)} m · c = ${nf(t.c)} m`,s?`Angles : A ${nf(s.al*R2D,1)}° · B ${nf(s.be*R2D,1)}° · C ${nf(s.ga*R2D,1)}°`:'Côtés incohérents',s?`Surface ${nf(s.S)} m² · hauteur sur a ${nf(s.ha)} m`:'',t.note?'Note : '+t.note:''].filter(Boolean).join('\r\n')}
+function itemText(i){
+  const L=[i.title||'',new Date(i.t).toLocaleString('fr-CH'),''];
+  if(i.kind==='val')L.push(`${i.label} : ${i.value}`);
+  if(i.kind==='calc'){(i.inputs||[]).forEach(x=>L.push(`${x[0]} : ${x[1]}`));if((i.inputs||[]).length)L.push('');(i.outputs||[]).forEach(x=>L.push(`${x[0]} : ${x[1]}`));if(i.rows){L.push('');i.rows.forEach(r=>L.push(r.join('\t')))}}
+  if(i.kind==='curve'){L.push('Fréquence (Hz)\tNiveau (dB)');OCT.forEach((c,k)=>L.push(`${c}\t${nf(i.bands[k],1)}`))}
+  if(i.note)L.push('','Note : '+i.note);
+  return L.join('\r\n');
+}
+function projectCSV(p){
+  const S=scene(p), c=C(), r=p.ref, L=[], row=(...a)=>L.push(a.map(csvCell).join(';'));
+  const byId=Object.fromEntries(S.pts.map(q=>[q.id,q]));
+  row('Projet',p.name); row('Exporté le',new Date().toLocaleString('fr-CH')); row('Température °C',nf(T,1)); row('Célérité m/s',nf(c,1)); row();
+  row('REPÈRE'); row('A–B m','A–C m','B–C m','Hauteur de mesure m','C à droite'); row(nf(r.AB),nf(r.AC),nf(r.BC),nf(r.h0),r.flip?'oui':'non'); row();
+  row('POINTS'); row('Nom','Type','Dist. A m','Dist. B m','Dist. C m','X m','Y m','Hauteur m','± hauteur m','Orienté vers','Note');
+  p.points.forEach(q=>{const s=byId[q.id];row(q.name,TYPES[q.type],nf(q.dA),nf(q.dB),nf(q.dC),s?nf(s.p[0]):'',s?nf(s.p[1]):'',s?nf(s.h):'',s?(s.known?'saisie':isFinite(s.sig)?nf(s.sig):''):'',q.aim&&byId[q.aim]?byId[q.aim].name:'',q.note||'')});
+  row();
+  row('DISTANCES ENTRE POINTS'); row('De','Vers','Distance m','Délai ms','Dist. horiz. m','Dénivelé m','Site °','Hors axe de la source °','Incidence sur la cible °');
+  for(let a=0;a<S.pts.length;a++)for(let b=a+1;b<S.pts.length;b++){
+    const P=S.pts[a],Q=S.pts[b],R=relation(P.p,Q.p,c),oa=P.aim&&byId[P.aim]?offAxis(P.p,byId[P.aim].p,Q.p):null,ob=Q.aim&&byId[Q.aim]?offAxis(Q.p,byId[Q.aim].p,P.p):null;
+    row(P.name,Q.name,nf(R.L),nf(R.t),nf(R.Lh),nf(R.dz),nf(R.site,1),oa?nf(oa.tot,1):'',ob?nf(ob.tot,1):'');
+  }
+  row();
+  row('TRIANGLES'); row('Nom','a m','b m','c m','Angle A °','Angle B °','Angle C °','Surface m²','Note');
+  p.tris.forEach(t=>{const s=triSolve(t.a,t.b,t.c);row(t.name,nf(t.a),nf(t.b),nf(t.c),s?nf(s.al*R2D,1):'',s?nf(s.be*R2D,1):'',s?nf(s.ga*R2D,1):'',s?nf(s.S):'',t.note||'')});
+  row();
+  row('VALEURS MÉMORISÉES'); row('Date','Bloc','Libellé','Valeur','Note');
+  p.items.forEach(i=>{const d=new Date(i.t).toLocaleString('fr-CH');
+    if(i.kind==='val')row(d,i.title,i.label,i.value,i.note||'');
+    if(i.kind==='calc'){(i.inputs||[]).forEach(x=>row(d,i.title,'entrée : '+x[0],x[1],''));(i.outputs||[]).forEach(x=>row(d,i.title,x[0],x[1],''));(i.rows||[]).forEach(rr=>row(d,i.title,'tableau',rr.join(' | '),''));if(i.note)row(d,i.title,'note',i.note,'')}
+  });
+  row();
+  row('COURBES 1/3 D’OCTAVE (dB)'); row('Date','Titre',...OCT.map(String));
+  p.items.filter(i=>i.kind==='curve').forEach(i=>row(new Date(i.t).toLocaleString('fr-CH'),i.title+(i.note?' — '+i.note:''),...i.bands.map(v=>nf(v,1))));
+  return '﻿'+L.join('\r\n');
+}
+$('#pjExpJson').onclick=()=>{const p=proj();shareOut(slug(p.name)+'_'+new Date().toISOString().slice(0,10)+'.json','application/json',JSON.stringify({app:'Régie',format:1,exported:new Date().toISOString(),project:p},null,1))};
+$('#pjExpCsv').onclick=()=>{const p=proj();shareOut(slug(p.name)+'_'+new Date().toISOString().slice(0,10)+'.csv','text/csv',projectCSV(p))};
+$('#pjImp').addEventListener('change',e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(String(rd.result).replace(/^﻿/,''));const p=normPj(o.project||o);if(PJ.list.some(x=>x.name===p.name))p.name+=' (importé)';PJ.list.push(p);switchPj(p.id);toast('Projet importé : '+p.name)}
+    catch(err){toast('Fichier illisible : choisissez un export JSON de Régie.')}};
+  rd.readAsText(file); e.target.value='';
+});
 
 /* ================= HEURES ================= */
 let H=store.get('regie.heures',{entries:[],label:''});
@@ -588,21 +1024,273 @@ function calcSon(){
 }
 
 /* ================= TÉLÉMÈTRE ================= */
-$$('#t-trigo input').forEach(i=>i.addEventListener('input',calcTrigo));
-function calcTrigo(){
-  const c=C();
-  let L=num('#g1L'),a=rad(num('#g1A')),h0=num('#g1H')||0;
-  $('#g1X').textContent=f(L*Math.cos(a),2)+' m'; $('#g1Y').textContent=f(L*Math.sin(a),2)+' m';
-  $('#g1Z').textContent=f(h0+L*Math.sin(a),2)+' m'; $('#g1T').textContent=f(L/c*1000,2)+' ms';
-  const L1=num('#g2L1'),a1=rad(num('#g2A1')),L2=num('#g2L2'),a2=rad(num('#g2A2'));
-  $('#g2H').textContent=f(L1*Math.sin(a1)-L2*Math.sin(a2),2)+' m';
-  $('#g2X1').textContent=f(L1*Math.cos(a1),2)+' m'; $('#g2X2').textContent=f(L2*Math.cos(a2),2)+' m';
-  const A=num('#g3A'),B=num('#g3B'),g=rad(num('#g3G'));
-  $('#g3D').textContent=f(Math.sqrt(A*A+B*B-2*A*B*Math.cos(g)),2)+' m';
-  $('#g3dd').textContent=f(Math.abs(A-B),2)+' m'; $('#g3dt').textContent=f(Math.abs(A-B)/c*1000,2)+' ms';
-  const dh=num('#g4H'),dd=num('#g4D');
-  $('#g4A').textContent=f(deg(Math.atan2(dh,dd)),1)+'°'; $('#g4L').textContent=f(Math.hypot(dh,dd),2)+' m'; $('#g4P').textContent=f(dh/dd*100,1)+' %';
+const SIG_D=0.01; // incertitude supposée par distance mesurée (m)
+function scene(p=proj()){
+  const r=p.ref, R=refFrame(r.AB,r.AC,r.BC,r.flip), h0=+r.h0||0, pts=[];
+  if(R)for(const q of p.points){
+    if(!(q.dA>0&&q.dB>0&&q.dC>0))continue;
+    const t=trilat(R,q.dA,q.dB,q.dC,q.below), known=q.hk!=null&&isFinite(q.hk);
+    if(known)t.p[2]=q.hk-h0;
+    pts.push({...q,p:t.p,z2:known?1:t.z2,h:t.p[2]+h0,known,sig:known?0:zSigma(R,[q.dA,q.dB,q.dC],q.below,SIG_D)});
+  }
+  return {R,pts,h0};
 }
+const nn=s=>{const v=num(s);return isFinite(v)?v:null};
+const cm=v=>v===0?'hauteur saisie':!isFinite(v)?'imprécis':v<0.995?'± '+Math.max(1,Math.round(v*100))+' cm':'± '+f(v,1)+' m';
+let ptEdit=null, ptDel=false, trEdit=null, trDel=false;
+function loadTrigo(){
+  const r=proj().ref;
+  $('#rAB').value=r.AB??''; $('#rAC').value=r.AC??''; $('#rBC').value=r.BC??''; $('#rH0').value=r.h0??0; $('#rFlip').checked=!!r.flip;
+  ptEdit=null; trEdit=null; renderAimOpts(); fillPtForm(null); fillTriForm(null);
+}
+['#rAB','#rAC','#rBC','#rH0'].forEach(s=>$(s).addEventListener('input',()=>{
+  const r=proj().ref; r.AB=nn('#rAB'); r.AC=nn('#rAC'); r.BC=nn('#rBC'); r.h0=nn('#rH0')||0; saveP(); renderTrigo(); previewPt();
+}));
+$('#rFlip').addEventListener('change',e=>{proj().ref.flip=e.target.checked;saveP();renderTrigo();previewPt()});
+
+function optList(sel,pts,blank){
+  const cur=sel.value;
+  sel.innerHTML=(blank?`<option value="">${blank}</option>`:'')+pts.map(q=>`<option value="${q.id}">${esc(q.name)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+}
+function renderAimOpts(){optList($('#pAim'),proj().points.filter(q=>q.id!==ptEdit),'Aucune')}
+function fillPtForm(q){
+  $('#pName').value=q?q.name:''; $('#pType').value=q?q.type:'hp';
+  $('#pA').value=q?.dA??''; $('#pB').value=q?.dB??''; $('#pC').value=q?.dC??''; $('#pBelow').checked=!!q?.below; $('#pHk').value=q?.hk??'';
+  $('#pAim').value=q?.aim||'';
+  $('#tPtFormT').textContent=q?'Modifier : '+q.name:'Nouveau point';
+  $('#pSave').textContent=q?'Enregistrer':'Ajouter';
+  $('#pDel').hidden=!q; ptDel=false; $('#pDel').textContent='Supprimer';
+  previewPt();
+}
+function previewPt(){
+  const S=scene(), dA=num('#pA'), dB=num('#pB'), dC=num('#pC'), w=$('#pvWarn');
+  w.hidden=true;
+  if(!S.R||!(dA>0&&dB>0&&dC>0)){$('#pvH').textContent='—';$('#pvS').textContent='—';$('#pvXY').textContent='—';
+    if(!S.R&&(dA||dB||dC)){w.hidden=false;w.textContent='Saisissez d’abord un repère valide (A–B, A–C, B–C).'}return}
+  const below=$('#pBelow').checked, t=trilat(S.R,dA,dB,dC,below), hk=num('#pHk'), sig=isFinite(hk)?0:zSigma(S.R,[dA,dB,dC],below,SIG_D);
+  $('#pvH').textContent=f(isFinite(hk)?hk:t.p[2]+S.h0,2)+' m'; $('#pvS').textContent=cm(sig);
+  if(isFinite(hk))return; $('#pvXY').textContent=f(t.p[0],2)+' · '+f(t.p[1],2);
+  if(t.z2<-0.09){w.hidden=false;w.textContent=`Distances incohérentes (écart ≈ ${f(Math.sqrt(-t.z2),2)} m) : vérifiez les trois mesures et le repère.`}
+  else if(t.z2<=0.0001){w.hidden=false;w.textContent='Point au niveau des repères : la hauteur ne peut pas être déterminée précisément.'}
+}
+$$('#tPtForm input, #tPtForm select').forEach(el=>{el.addEventListener('input',previewPt);el.addEventListener('change',previewPt)});
+$('#pSave').onclick=()=>{
+  const p=proj(), q={name:$('#pName').value.trim()||('Point '+(p.points.length+1)),type:$('#pType').value,dA:nn('#pA'),dB:nn('#pB'),dC:nn('#pC'),aim:$('#pAim').value||null,below:$('#pBelow').checked,hk:nn('#pHk')};
+  if(!(q.dA>0&&q.dB>0&&q.dC>0)){toast('Saisissez les trois distances depuis A, B et C.');return}
+  let msg;
+  if(ptEdit){const o=p.points.find(x=>x.id===ptEdit);Object.assign(o,q);if(o.aim===o.id)o.aim=null;msg='Point enregistré : '+o.name}
+  else{q.id=uid();p.points.push(q);msg='Point ajouté : '+q.name}
+  saveP(); ptEdit=null; renderAimOpts(); fillPtForm(null); renderTrigo(); toast(msg);
+};
+$('#pNew').onclick=()=>{ptEdit=null;renderAimOpts();fillPtForm(null);$('#pName').focus()};
+$('#pDel').onclick=()=>{
+  if(!ptDel){ptDel=true;$('#pDel').textContent='Confirmer la suppression';return}
+  const p=proj(); p.points=p.points.filter(x=>x.id!==ptEdit); p.points.forEach(x=>{if(x.aim===ptEdit)x.aim=null});
+  saveP(); ptEdit=null; renderAimOpts(); fillPtForm(null); renderTrigo();
+};
+$('#tPts').addEventListener('click',e=>{
+  const it=e.target.closest('.it'); if(!it)return;
+  const q=proj().points.find(x=>x.id===it.dataset.id); if(!q)return;
+  ptEdit=q.id; renderAimOpts(); fillPtForm(q); renderTrigo(); $('#tPtForm').scrollIntoView({block:'nearest',behavior:'smooth'});
+});
+
+function renderTrigo(){
+  const p=proj(), S=scene(p), r=p.ref, w=$('#rWarn');
+  $('#tPjName').textContent=p.name;
+  const t=triSolve(r.BC,r.AC,r.AB);
+  $('#rAa').textContent=t?f(t.al*R2D,1)+'°':'—'; $('#rAb').textContent=t?f(t.be*R2D,1)+'°':'—'; $('#rAc').textContent=t?f(t.ga*R2D,1)+'°':'—'; $('#rS').textContent=t?f(t.S,1)+' m²':'—';
+  w.hidden=true;
+  if(r.AB&&r.AC&&r.BC&&!S.R){w.hidden=false;w.textContent='Ces trois longueurs ne forment pas un triangle : vérifiez les mesures.'}
+  else if(t&&Math.min(t.al,t.be,t.ga)*R2D<20){w.hidden=false;w.textContent='Triangle très aplati : les positions seront imprécises. Écartez davantage les trois points.'}
+  const byId=Object.fromEntries(p.points.map(q=>[q.id,q]));
+  $('#tPtCount').textContent=p.points.length?p.points.length+' point'+(p.points.length>1?'s':''):'';
+  $('#tPts').innerHTML=p.points.length?p.points.map(q=>{
+    const s=S.pts.find(x=>x.id===q.id);
+    const sub=s?`X ${f(s.p[0],2)} · Y ${f(s.p[1],2)}${q.aim&&byId[q.aim]?' · vers '+esc(byId[q.aim].name):''}`:(S.R?'distances incomplètes':'repère manquant');
+    const bad=s&&s.z2<-0.09;
+    return `<div class="it${q.id===ptEdit?' sel':''}" data-id="${q.id}"><span class="badge ${q.type}">${TYPES[q.type]}</span><span>${esc(q.name)}<br><small class="dim mono">${sub}</small></span><span class="mono${bad?' bad':''}">${s?'h '+f(s.h,2)+' m':'—'}<br><small class="dim">${s?(bad?'incohérent':cm(s.sig)):''}</small></span></div>`;
+  }).join(''):'<p class="note" style="margin:0 0 8px">Aucun point. Mesurez la distance depuis A, B et C jusqu’au point (enceinte, micro…) puis ajoutez-le.</p>';
+  renderRelOpts(S); calcRel(S); calcDt(S); drawScene(S);
+  if(curTab==='projet')renderProjet();
+}
+function renderRelOpts(S){
+  const p=proj(), ui=p.ui||(p.ui={});
+  ['rlFrom','rlTo','dtTo'].forEach(id=>{const el=$('#'+id);optList(el,S.pts);});
+  const hp=S.pts.find(q=>q.type==='hp'), mic=S.pts.find(q=>q.type==='mic');
+  const set=(id,key,def)=>{const el=$('#'+id);if(ui[key]&&S.pts.some(q=>q.id===ui[key]))el.value=ui[key];else if(def)el.value=def.id};
+  set('rlFrom','from',hp||S.pts[0]); set('rlTo','to',mic||S.pts[1]); set('dtTo','dt',mic||S.pts[0]);
+}
+['rlFrom','rlTo','dtTo'].forEach(id=>$('#'+id).addEventListener('change',e=>{
+  const p=proj();p.ui=p.ui||{};p.ui[{rlFrom:'from',rlTo:'to',dtTo:'dt'}[id]]=e.target.value;saveP();
+  const S=scene();calcRel(S);calcDt(S);drawScene(S);
+}));
+function calcRel(S){
+  const a=S.pts.find(q=>q.id===$('#rlFrom').value), b=S.pts.find(q=>q.id===$('#rlTo').value);
+  const ids=['rlL','rlT','rlLh','rlDz','rlSite','rlAz','rlOffS','rlOffT'];
+  $('#rlOffSi').textContent=''; $('#rlOffTi').textContent='';
+  if(!a||!b||a===b){ids.forEach(i=>$('#'+i).textContent='—');return}
+  const R=relation(a.p,b.p,C()), sg=v=>(v>0?'+':'')+f(v,1);
+  $('#rlL').textContent=f(R.L,2)+' m'; $('#rlT').textContent=f(R.t,2)+' ms'; $('#rlLh').textContent=f(R.Lh,2)+' m';
+  $('#rlDz').textContent=(R.dz>0?'+':'')+f(R.dz,2)+' m'; $('#rlSite').textContent=sg(R.site)+'°'; $('#rlAz').textContent=f((R.az+360)%360,1)+'°';
+  const off=(P,Q,b,i)=>{const X=P.aim&&S.pts.find(q=>q.id===P.aim);const o=X?offAxis(P.p,X.p,Q.p):null;
+    if(!o){$('#'+b).textContent='—';$('#'+i).textContent=P.aim?'orientation sans position':'pas d’orientation';return}
+    $('#'+b).textContent=f(o.tot,1)+'°'; $('#'+i).textContent='H '+sg(o.h)+'° · V '+sg(o.v)+'°'};
+  off(a,b,'rlOffS','rlOffSi'); off(b,a,'rlOffT','rlOffTi');
+}
+function calcDt(S){
+  const to=S.pts.find(q=>q.id===$('#dtTo').value), tab=$('#dtTab');
+  if(!to){tab.innerHTML='<tr><td class="dim" style="text-align:left">Ajoutez au moins une enceinte et un point d’écoute.</td></tr>';return}
+  const c=C(), hps=S.pts.filter(q=>q.type==='hp'&&q.id!==to.id).map(q=>{
+    const R=relation(q.p,to.p,c), X=q.aim&&S.pts.find(x=>x.id===q.aim), o=X?offAxis(q.p,X.p,to.p):null;
+    return {q,R,o};
+  }).sort((a,b)=>a.R.L-b.R.L);
+  if(!hps.length){tab.innerHTML='<tr><td class="dim" style="text-align:left">Aucune enceinte dans ce projet.</td></tr>';return}
+  const tmax=Math.max(...hps.map(h=>h.R.t));
+  tab.innerHTML='<tr><th>Enceinte</th><th>Distance</th><th>Temps</th><th>Aligner</th><th>Hors axe</th></tr>'+hps.map(h=>
+    `<tr><td>${esc(h.q.name)}</td><td>${f(h.R.L,2)} m</td><td>${f(h.R.t,2)} ms</td><td>${tmax-h.R.t<0.005?'réf.':'+'+f(tmax-h.R.t,2)+' ms'}</td><td>${h.o?f(h.o.tot,0)+'°':'—'}</td></tr>`).join('');
+}
+
+/* ---------- Vue 3D ---------- */
+const V3={yaw:-0.75,pitch:0.6,zoom:1};
+const VIEWS={'3d':[-0.75,0.6],top:[0,Math.PI/2],front:[0,0.06],side:[-Math.PI/2,0.06]};
+function setView(v){const a=VIEWS[v];if(!a)return;V3.yaw=a[0];V3.pitch=a[1];V3.zoom=1;$$('#tView button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));drawScene()}
+segInit('#tView',setView);
+$('#tLegs').addEventListener('change',()=>drawScene());
+function drawScene(S){
+  const cv=$('#tCv'); if(!cv||cv.offsetParent===null)return;
+  S=S||scene();
+  const {w,h,d}=fitCanvas(cv), g=cv.getContext('2d'); g.clearRect(0,0,w,h);
+  const mono=css('--mono'), cFg=css('--fg'), cDim=css('--dim'), cLine=css('--line'), cAcc=css('--accent'), cBlue=css('--blue');
+  g.font=`${10*d}px ${mono}`; g.textBaseline='alphabetic';
+  if(!S.R){g.fillStyle=cDim;g.textAlign='center';g.fillText('Saisissez A–B, A–C et B–C',w/2,h/2-6*d);g.fillText('pour afficher la scène.',w/2,h/2+8*d);return}
+  const gz=-S.h0, all=[S.R.A,S.R.B,S.R.C,...S.pts.map(q=>q.p),...S.pts.map(q=>[q.p[0],q.p[1],gz])];
+  const mn=k=>Math.min(...all.map(v=>v[k]),k===2?gz:Infinity), mx=k=>Math.max(...all.map(v=>v[k]),k===2?gz:-Infinity);
+  const x0=mn(0),x1=mx(0),y0=mn(1),y1=mx(1),z0=mn(2),z1=mx(2);
+  const c0=[(x0+x1)/2,(y0+y1)/2,(z0+z1)/2], rad=Math.max(1,Math.hypot(x1-x0,y1-y0,z1-z0)/2);
+  const cy=Math.cos(V3.yaw),sy=Math.sin(V3.yaw),cp=Math.cos(V3.pitch),sp=Math.sin(V3.pitch);
+  const sc=V3.zoom*Math.min(w,h)*0.44/rad, F=rad*4;
+  const pr=v=>{const x=v[0]-c0[0],y=v[1]-c0[1],z=v[2]-c0[2],x1=x*cy-y*sy,y1=x*sy+y*cy,up=z*cp+y1*sp,dep=y1*cp-z*sp,k=F/Math.max(F*0.2,F+dep*V3.zoom);return [w/2+x1*sc*k,h/2-up*sc*k,dep]};
+  const ln=(a,b,col,lw,dash,al)=>{const A=pr(a),B=pr(b);g.strokeStyle=col;g.lineWidth=lw*d;g.globalAlpha=al??1;g.setLineDash(dash?dash.map(v=>v*d):[]);g.beginPath();g.moveTo(A[0],A[1]);g.lineTo(B[0],B[1]);g.stroke();g.setLineDash([]);g.globalAlpha=1};
+  // grille au sol
+  const span=Math.max(x1-x0,y1-y0), step=[0.5,1,2,5,10,20,50,100].find(s=>span/s<=10)||200;
+  const gx0=Math.floor(x0/step-1)*step, gx1=Math.ceil(x1/step+1)*step, gy0=Math.floor(y0/step-1)*step, gy1=Math.ceil(y1/step+1)*step;
+  for(let x=gx0;x<=gx1+1e-9;x+=step)ln([x,gy0,gz],[x,gy1,gz],cLine,1);
+  for(let y=gy0;y<=gy1+1e-9;y+=step)ln([gx0,y,gz],[gx1,y,gz],cLine,1);
+  g.fillStyle=cDim; g.textAlign='left'; {const q=pr([gx1,gy0,gz]);g.fillText('grille '+f(step,step<1?1:0)+' m',Math.min(q[0],w-70*d),Math.min(q[1]+12*d,h-4*d))}
+  // triangle de repère
+  const tri=[S.R.A,S.R.B,S.R.C].map(pr);
+  g.beginPath();tri.forEach((q,k)=>k?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.closePath();
+  g.fillStyle=cAcc;g.globalAlpha=0.08;g.fill();g.globalAlpha=1;g.strokeStyle=cDim;g.lineWidth=1*d;g.stroke();
+  if(S.h0>0)[S.R.A,S.R.B,S.R.C].forEach(v=>ln(v,[v[0],v[1],gz],cDim,1,[2,3]));
+  // mesures (triangles depuis A, B, C)
+  if($('#tLegs').checked)S.pts.forEach(q=>[S.R.A,S.R.B,S.R.C].forEach(v=>ln(v,q.p,q.type==='mic'?cBlue:q.type==='hp'?cAcc:cFg,1,null,0.22)));
+  // verticales
+  S.pts.forEach(q=>{ln(q.p,[q.p[0],q.p[1],gz],cDim,1,[3,3],0.8);const G=pr([q.p[0],q.p[1],gz]);g.strokeStyle=cDim;g.lineWidth=1*d;g.beginPath();g.moveTo(G[0]-3*d,G[1]);g.lineTo(G[0]+3*d,G[1]);g.stroke()});
+  // orientations
+  S.pts.forEach(q=>{
+    const X=q.aim&&S.pts.find(x=>x.id===q.aim); if(!X)return;
+    const v=vsub(X.p,q.p), L=vlen(v); if(!L)return;
+    const len=Math.min(L*0.6,rad*0.45), e=[q.p[0]+v[0]/L*len,q.p[1]+v[1]/L*len,q.p[2]+v[2]/L*len];
+    const col=q.type==='mic'?cBlue:q.type==='hp'?cAcc:cFg; ln(q.p,e,col,1.5);
+    const A=pr(q.p),B=pr(e),an=Math.atan2(B[1]-A[1],B[0]-A[0]),s=6*d;
+    g.fillStyle=col;g.beginPath();g.moveTo(B[0],B[1]);g.lineTo(B[0]-s*Math.cos(an-0.45),B[1]-s*Math.sin(an-0.45));g.lineTo(B[0]-s*Math.cos(an+0.45),B[1]-s*Math.sin(an+0.45));g.closePath();g.fill();
+  });
+  // relation sélectionnée
+  const ra=S.pts.find(q=>q.id===$('#rlFrom').value), rb=S.pts.find(q=>q.id===$('#rlTo').value);
+  if(ra&&rb&&ra!==rb){ln(ra.p,rb.p,cFg,1.5,[6,4]);const M=pr([(ra.p[0]+rb.p[0])/2,(ra.p[1]+rb.p[1])/2,(ra.p[2]+rb.p[2])/2]);
+    const t=f(vlen(vsub(rb.p,ra.p)),2)+' m';g.font=`${10*d}px ${mono}`;const tw=g.measureText(t).width;g.fillStyle=css('--bg');g.globalAlpha=0.85;g.fillRect(M[0]-tw/2-3*d,M[1]-10*d,tw+6*d,14*d);g.globalAlpha=1;g.fillStyle=cFg;g.textAlign='center';g.fillText(t,M[0],M[1])}
+  // repères A B C
+  g.textAlign='center';
+  [['A',S.R.A],['B',S.R.B],['C',S.R.C]].forEach(([n,v])=>{const q=pr(v);g.fillStyle=cDim;g.fillRect(q[0]-3*d,q[1]-3*d,6*d,6*d);g.fillStyle=cFg;g.font=`600 ${11*d}px ${css('--sans')}`;g.fillText(n,q[0],q[1]+15*d)});
+  // points, du plus loin au plus proche
+  const pp=S.pts.map(q=>({q,s:pr(q.p)})).sort((a,b)=>b.s[2]-a.s[2]);
+  pp.forEach(({q,s})=>{
+    const r=4.5*d; g.lineWidth=1.5*d;
+    if(q.type==='hp'){g.fillStyle=cAcc;g.fillRect(s[0]-r,s[1]-r,2*r,2*r)}
+    else if(q.type==='mic'){g.fillStyle=cBlue;g.beginPath();g.arc(s[0],s[1],r,0,7);g.fill()}
+    else{g.fillStyle=cFg;g.beginPath();g.moveTo(s[0],s[1]-r*1.3);g.lineTo(s[0]+r*1.3,s[1]);g.lineTo(s[0],s[1]+r*1.3);g.lineTo(s[0]-r*1.3,s[1]);g.closePath();g.fill()}
+    const t2='h '+f(q.h,2)+' m'; g.font=`600 ${11*d}px ${css('--sans')}`; const tw=Math.max(g.measureText(q.name).width,t2.length*6*d);
+    const right=s[0]+8*d+tw<w-2*d, lx=right?s[0]+8*d:s[0]-8*d; g.textAlign=right?'left':'right';
+    g.fillStyle=cFg; g.fillText(q.name,lx,s[1]-2*d);
+    g.font=`${9.5*d}px ${mono}`; g.fillStyle=cDim; g.fillText(t2,lx,s[1]+10*d);
+  });
+}
+(()=>{
+  const cv=$('#tCv'), ptrs=new Map(); let pinch=0;
+  cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y)}});
+  cv.addEventListener('pointermove',e=>{
+    const o=ptrs.get(e.pointerId); if(!o)return;
+    if(ptrs.size===1){V3.yaw-=(e.clientX-o.x)*0.01;V3.pitch=clamp(V3.pitch+(e.clientY-o.y)*0.01,0,Math.PI/2);$$('#tView button').forEach(b=>b.setAttribute('aria-pressed','false'))}
+    o.x=e.clientX; o.y=e.clientY;
+    if(ptrs.size===2){const [a,b]=[...ptrs.values()],dd=Math.hypot(a.x-b.x,a.y-b.y);if(pinch)V3.zoom=clamp(V3.zoom*dd/pinch,0.3,8);pinch=dd}
+    drawScene();
+  });
+  const up=e=>{ptrs.delete(e.pointerId);pinch=0};
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();V3.zoom=clamp(V3.zoom*Math.exp(-e.deltaY*0.0015),0.3,8);drawScene()},{passive:false});
+  cv.addEventListener('dblclick',()=>setView('3d'));
+})();
+
+/* ---------- Triangle 3 côtés ---------- */
+function fillTriForm(t){
+  if(t){$('#trName').value=t.name;$('#trA').value=t.a??'';$('#trB').value=t.b??'';$('#trC').value=t.c??''}
+  else $('#trName').value='';
+  $('#trMode').textContent=t?'modification':'nouveau'; $('#trSave').textContent=t?'Enregistrer':'Enregistrer le triangle';
+  $('#trNew').hidden=!t; $('#trDel').hidden=!t; trDel=false; $('#trDel').textContent='Supprimer';
+  calcTri(); renderTriList();
+}
+function calcTri(){
+  const a=num('#trA'),b=num('#trB'),c=num('#trC'),t=triSolve(a,b,c),w=$('#trWarn');
+  const set=(id,v)=>$('#'+id).textContent=v;
+  if(!t){['trAl','trBe','trGa','trS','trH'].forEach(i=>set(i,'—'));w.hidden=!(a&&b&&c);w.textContent='Ces longueurs ne forment pas un triangle : le plus grand côté doit être plus court que la somme des deux autres.'}
+  else{w.hidden=true;set('trAl',f(t.al*R2D,1)+'°');set('trBe',f(t.be*R2D,1)+'°');set('trGa',f(t.ga*R2D,1)+'°');set('trS',f(t.S,2)+' m²');set('trH',f(t.ha,2)+' m')}
+  drawTri(a,b,c,t);
+}
+function drawTri(a,b,c,t){
+  const cv=$('#trCv'); if(!cv||cv.offsetParent===null)return;
+  const {w,h,d}=fitCanvas(cv),g=cv.getContext('2d'); g.clearRect(0,0,w,h); if(!t)return;
+  const P=[[0,0],[c,0],[b*Math.cos(t.al),b*Math.sin(t.al)]];
+  const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),xm=Math.min(...xs),xM=Math.max(...xs),yM=Math.max(...ys);
+  const pad=22*d, s=Math.min((w-2*pad)/(xM-xm||1),(h-2*pad)/(yM||1));
+  const ox=(w-(xM-xm)*s)/2-xm*s, oy=h-(h-yM*s)/2;
+  const S=P.map(p=>[ox+p[0]*s,oy-p[1]*s]);
+  g.beginPath();S.forEach((p,k)=>k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();
+  g.fillStyle=css('--accent');g.globalAlpha=0.1;g.fill();g.globalAlpha=1;g.strokeStyle=css('--fg');g.lineWidth=1.5*d;g.stroke();
+  const cx=(S[0][0]+S[1][0]+S[2][0])/3, cyy=(S[0][1]+S[1][1]+S[2][1])/3;
+  g.font=`600 ${11*d}px ${css('--sans')}`;g.textAlign='center';g.textBaseline='middle';
+  ['A','B','C'].forEach((n,k)=>{const v=[S[k][0]-cx,S[k][1]-cyy],L=Math.hypot(...v)||1;g.fillStyle=css('--fg');g.fillText(n,S[k][0]+v[0]/L*12*d,S[k][1]+v[1]/L*12*d)});
+  g.font=`${10*d}px ${css('--mono')}`;g.fillStyle=css('--accent');
+  [[1,2,'a'],[0,2,'b'],[0,1,'c']].forEach(([i,j,n])=>{const m=[(S[i][0]+S[j][0])/2,(S[i][1]+S[j][1])/2],v=[m[0]-cx,m[1]-cyy],L=Math.hypot(...v)||1;g.fillText(n,m[0]+v[0]/L*11*d,m[1]+v[1]/L*11*d)});
+  g.textBaseline='alphabetic';
+}
+['#trA','#trB','#trC'].forEach(s=>$(s).addEventListener('input',calcTri));
+function renderTriList(){
+  const p=proj();
+  $('#trList').innerHTML=p.tris.map(t=>{const s=triSolve(t.a,t.b,t.c);
+    return `<div class="it${t.id===trEdit?' sel':''}" data-id="${t.id}"><span class="badge">TRI</span><span>${esc(t.name)}<br><small class="dim mono">${f(t.a,2)} · ${f(t.b,2)} · ${f(t.c,2)} m</small></span><span class="mono dim">${s?f(s.al*R2D,0)+'° '+f(s.be*R2D,0)+'° '+f(s.ga*R2D,0)+'°':'—'}</span></div>`}).join('');
+}
+$('#trSave').onclick=()=>{
+  const p=proj(), t={name:$('#trName').value.trim()||('Triangle '+(p.tris.length+1)),a:nn('#trA'),b:nn('#trB'),c:nn('#trC')};
+  if(!triSolve(t.a,t.b,t.c)){toast('Ces longueurs ne forment pas un triangle.');return}
+  if(trEdit){Object.assign(p.tris.find(x=>x.id===trEdit),t)}else{t.id=uid();p.tris.push(t);trEdit=t.id}
+  saveP(); fillTriForm(p.tris.find(x=>x.id===trEdit)); toast('Triangle enregistré : '+t.name);
+};
+$('#trNew').onclick=()=>{trEdit=null;fillTriForm(null);$('#trName').focus()};
+$('#trDel').onclick=()=>{if(!trDel){trDel=true;$('#trDel').textContent='Confirmer la suppression';return}const p=proj();p.tris=p.tris.filter(x=>x.id!==trEdit);trEdit=null;saveP();fillTriForm(null)};
+$('#trList').addEventListener('click',e=>{const it=e.target.closest('.it');if(!it)return;trEdit=it.dataset.id;fillTriForm(proj().tris.find(x=>x.id===trEdit))});
+
+/* ---------- Hauteur et angle ---------- */
+['#hL','#hD','#hH0'].forEach(s=>$(s).addEventListener('input',calcHaut));
+function calcHaut(){
+  const L=num('#hL'),D=num('#hD'),h0=num('#hH0')||0,w=$('#hWarn'),X=Math.sqrt(D*D-h0*h0),up=Math.sqrt(L*L-X*X);
+  if(!(D>h0)||!(L>=X)||!isFinite(up)){['hHt','hX','hAng'].forEach(i=>$('#'+i).textContent='—');w.hidden=!(L&&D);w.textContent='Mesures incohérentes : la distance au sommet doit dépasser la distance horizontale.';return}
+  w.hidden=true; $('#hHt').textContent=f(h0+up,2)+' m'; $('#hX').textContent=f(X,2)+' m'; $('#hAng').textContent=f(Math.atan2(up,X)*R2D,1)+'°';
+}
+['#g4H','#g4D'].forEach(s=>$(s).addEventListener('input',calcVisee));
+function calcVisee(){const dh=num('#g4H'),dd=num('#g4D');
+  $('#g4A').textContent=f(Math.atan2(dh,dd)*R2D,1)+'°'; $('#g4L').textContent=f(Math.hypot(dh,dd),2)+' m'; $('#g4P').textContent=f(dh/dd*100,1)+' %'}
+function calcTrigo(){renderTrigo();calcTri();calcHaut();calcVisee()}
 
 /* ================= LINE ARRAY ================= */
 $$('#t-array input, #t-array select').forEach(i=>i.addEventListener('input',()=>{calcArray();drawArray()}));
@@ -752,85 +1440,262 @@ async function ensureMic(){
 }
 
 /* ================= ANALYSEUR ================= */
-let an=null, rtaOn=false, frozen=false, hold=false, peaks=null, fbuf=null, tbuf=null, raf=0, sgImg=null, LUT=null;
+let an=null, rtaOn=false, frozen=false, hold=false, peaks=null, fbuf=null, tbuf=null, raf=0, LUT=null;
 const OCT=[25,31.5,40,50,63,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000,20000];
-segInit('#rMode',()=>{peaks=null});
-segInit('#rAvg',v=>{if(an)an.smoothingTimeConstant=+v});
+const GRID=[...Array(241)].map((_,i)=>20*Math.pow(1000,i/240)); // 20 Hz–20 kHz au 1/24 d'octave
+const RA={W:null,L:null,P:null,D:null,cum:null,avgP:null,avgN:0,avg:false,ref:store.get('regie.ref',null),cur:null,sgCur:null,
+  sgBuf:null,sgImg:null,sgRows:null,sgAcc:0,lastT:0,dirty:true,pkT:0,clipT:0,cols:null,bands:null,meter:null};
+const FMIN=20,FMAX=20000,LMIN=Math.log10(FMIN),LSPAN=Math.log10(FMAX)-LMIN;
+const NOTE=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+function noteName(hz){if(!(hz>15))return '';const m=12*Math.log2(hz/440)+69,r=Math.round(m),c=Math.round((m-r)*100);return NOTE[(r%12+12)%12]+(Math.floor(r/12)-1)+(c?(c>0?' +':' −')+Math.abs(c)+'c':'')}
+const fHz=hz=>hz>=1000?f(hz/1000,hz>=10000?1:2)+' kHz':f(hz,hz<100?1:0)+' Hz';
+function wDb(hz,w){
+  if(w==='Z'||!(hz>0))return 0; const f2=hz*hz;
+  if(w==='A')return 20*Math.log10(148693636*f2*f2/((f2+424.36)*Math.sqrt((f2+11599.29)*(f2+544496.41))*(f2+148693636)))+2.0;
+  return 20*Math.log10(148693636*f2/((f2+424.36)*(f2+148693636)))+0.06;
+}
+function allocRTA(){
+  const n=an.frequencyBinCount, bw=ctx.sampleRate/an.fftSize, w=$('#rW').value;
+  fbuf=new Float32Array(n); tbuf=new Float32Array(an.fftSize);
+  RA.L=new Float64Array(n); RA.P=RA.L; RA.D=new Float32Array(n); RA.cum=new Float64Array(n+1); RA.W=new Float32Array(n);
+  for(let k=0;k<n;k++)RA.W[k]=wDb(k*bw,w);
+  RA.avgP=null; RA.avgN=0; RA.sgRows=null; peaks=null; RA.dirty=true;
+}
+function grab(){
+  an.getFloatFrequencyData(fbuf); an.getFloatTimeDomainData(tbuf);
+  const n=fbuf.length, L=RA.L, W=RA.W;
+  for(let k=0;k<n;k++){const v=fbuf[k];L[k]=v>-300?Math.pow(10,(v+W[k])/10):1e-30}
+  if(RA.avg){
+    if(!RA.avgP){RA.avgP=new Float64Array(n);RA.avgN=0}
+    const a=RA.avgP,m=RA.avgN; for(let k=0;k<n;k++)a[k]=(a[k]*m+L[k])/(m+1);
+    RA.avgN++; RA.P=a;
+  } else RA.P=L;
+  const P=RA.P,D=RA.D,cum=RA.cum; cum[0]=0;
+  for(let k=0;k<n;k++){D[k]=10*Math.log10(P[k]+1e-30);cum[k+1]=cum[k]+P[k]}
+  let pk=0,s=0; for(let i=0;i<tbuf.length;i++){const v=tbuf[i];s+=v*v;const a=v<0?-v:v;if(a>pk)pk=a}
+  return {rms:10*Math.log10(s/tbuf.length+1e-20),pk:20*Math.log10(pk+1e-10)};
+}
+const fAtX=(x,w)=>Math.pow(10,LMIN+x/w*LSPAN);
+// niveau moyen (énergie) dans une bande de 1/N d'octave centrée sur fc
+function smoothAt(fc,N){
+  const bw=ctx.sampleRate/an.fftSize, n=RA.P.length, r=Math.pow(2,1/(2*N));
+  const k0=Math.max(1,Math.ceil(fc/r/bw)), k1=Math.min(n-1,Math.floor(fc*r/bw));
+  if(k1>=k0)return 10*Math.log10((RA.cum[k1+1]-RA.cum[k0])/(k1-k0+1)+1e-30);
+  const kf=fc/bw,k=Math.min(n-2,Math.max(1,Math.floor(kf))),u=kf-k; return RA.D[k]*(1-u)+RA.D[k+1]*u;
+}
+// niveau d'une bande de tiers d'octave (somme d'énergie)
+function bandLevel(c){
+  const bw=ctx.sampleRate/an.fftSize, n=RA.P.length, lo=c/Math.pow(2,1/6), hi=c*Math.pow(2,1/6);
+  let k0=Math.max(1,Math.ceil(lo/bw)), k1=Math.min(n-1,Math.floor(hi/bw));
+  if(k1<k0)k0=k1=Math.min(n-1,Math.max(1,Math.round(c/bw)));
+  return 10*Math.log10(RA.cum[k1+1]-RA.cum[k0]+1e-30);
+}
+function colLevels(w){
+  const bw=ctx.sampleRate/an.fftSize, n=RA.P.length, N=+$('#rSmooth').value, D=RA.D, col=new Float32Array(w);
+  for(let x=0;x<w;x++){
+    const fc=fAtX(x+0.5,w);
+    if(N){col[x]=smoothAt(fc,N);continue}
+    const k0=Math.max(1,Math.ceil(fAtX(x,w)/bw)), k1=Math.min(n-1,Math.floor(fAtX(x+1,w)/bw));
+    if(k1>=k0){let m=-400;for(let k=k0;k<=k1;k++)if(D[k]>m)m=D[k];col[x]=m}
+    else{const kf=fc/bw,k=Math.min(n-2,Math.max(1,Math.floor(kf))),u=kf-k;col[x]=D[k]*(1-u)+D[k+1]*u}
+  }
+  return col;
+}
+function findPeaks(cnt){
+  const D=RA.D,n=D.length,bw=ctx.sampleRate/an.fftSize,k0=Math.max(2,Math.ceil(40/bw)),k1=Math.min(n-2,Math.floor(18000/bw)),c=[];
+  for(let k=k0;k<=k1;k++){const v=D[k];if(v>D[k-1]&&v>=D[k+1])c.push(k)}
+  c.sort((a,b)=>D[b]-D[a]);
+  const out=[];
+  for(const k of c){
+    const a=D[k-1],b=D[k],g2=D[k+1],den=a-2*b+g2,dl=den<0?0.5*(a-g2)/den:0,hz=(k+dl)*bw;
+    if(out.some(o=>Math.abs(Math.log2(o.hz/hz))<1/6))continue;
+    out.push({hz,db:b-0.25*(a-g2)*dl}); if(out.length>=cnt)break;
+  }
+  return out;
+}
 function buildLUT(){
   LUT=new Uint8ClampedArray(256*3);
-  const stops=[[0,[12,14,17]],[0.35,[40,52,92]],[0.6,[150,70,60]],[0.82,[233,162,59]],[1,[255,245,220]]];
-  for(let i=0;i<256;i++){const t=i/255;let k=0;while(k<stops.length-2&&t>stops[k+1][0])k++;
-    const [t0,c0]=stops[k],[t1,c1]=stops[k+1],u=(t-t0)/(t1-t0);for(let j=0;j<3;j++)LUT[i*3+j]=c0[j]+(c1[j]-c0[j])*u}
+  const st=[[0,[12,14,17]],[0.3,[34,44,86]],[0.55,[128,58,96]],[0.78,[226,120,52]],[0.92,[240,196,90]],[1,[255,248,228]]];
+  for(let i=0;i<256;i++){const t=i/255;let k=0;while(k<st.length-2&&t>st[k+1][0])k++;
+    const [t0,c0]=st[k],[t1,c1]=st[k+1],u=(t-t0)/(t1-t0);for(let j=0;j<3;j++)LUT[i*3+j]=c0[j]+(c1[j]-c0[j])*u}
+}
+function setRunUI(){
+  $('#rRun').textContent=rtaOn?'ARRÊTER':'DÉMARRER'; $('#rRun').className='btn '+(rtaOn?'on':'pri');
+  $('#rFreeze').disabled=!rtaOn; $('#rAvgBtn').disabled=!rtaOn;
+  $('#rFreeze').textContent=frozen?'REPRENDRE':'FIGER';
+  $('#rAvgBtn').className='btn'+(RA.avg?' on':''); if(!RA.avg)$('#rAvgBtn').textContent='MOYENNE';
+  $('#rHold').className='btn'+(hold?' on':'');
+  $('#rRefClr').hidden=!RA.ref;
+  markTab('rta',rtaOn);
 }
 $('#rRun').onclick=async()=>{
-  if(rtaOn){rtaOn=false;cancelAnimationFrame(raf);$('#rRun').textContent='DÉMARRER';$('#rRun').className='btn pri';$('#rFreeze').disabled=true;markTab('rta',false);keepAwake('rta',false);return}
-  try{const s=await ensureMic();
-    if(!an){an=ctx.createAnalyser();an.fftSize=8192;an.minDecibels=-140;an.maxDecibels=0;s.connect(an);fbuf=new Float32Array(an.frequencyBinCount);tbuf=new Float32Array(an.fftSize)}
-    an.smoothingTimeConstant=+segVal('#rAvg');
-    if(!LUT)buildLUT();
-    rtaOn=true;frozen=false;$('#rFreeze').disabled=false;$('#rFreeze').textContent='FIGER';$('#rRun').textContent='ARRÊTER';$('#rRun').className='btn on';markTab('rta',true);keepAwake('rta',true);
-    loop();
+  if(rtaOn){rtaOn=false;cancelAnimationFrame(raf);keepAwake('rta',false);setRunUI();$('#rInfo').textContent='Micro arrêté';return}
+  try{
+    const s=await ensureMic();
+    if(!an){an=ctx.createAnalyser();an.minDecibels=-150;an.maxDecibels=0;s.connect(an)}
+    an.fftSize=+$('#rFft').value; an.smoothingTimeConstant=+$('#rAvg').value;
+    allocRTA(); if(!LUT)buildLUT();
+    rtaOn=true; frozen=false; RA.lastT=0; keepAwake('rta',true); setRunUI();
+    raf=requestAnimationFrame(loop);
   }catch(e){$('#rInfo').textContent=micErr(e)}
 };
-$('#rFreeze').onclick=()=>{frozen=!frozen;$('#rFreeze').textContent=frozen?'REPRENDRE':'FIGER'};
-$('#rHold').onclick=()=>{hold=!hold;peaks=null;$('#rHold').textContent='CRÊTES : '+(hold?'OUI':'NON')};
+$('#rFreeze').onclick=()=>{frozen=!frozen;setRunUI()};
+$('#rAvgBtn').onclick=()=>{RA.avg=!RA.avg;RA.avgP=null;RA.avgN=0;setRunUI()};
+$('#rHold').onclick=()=>{hold=!hold;peaks=null;setRunUI();RA.dirty=true};
+$('#rFft').addEventListener('change',()=>{if(an){an.fftSize=+$('#rFft').value;allocRTA()}});
+$('#rW').addEventListener('change',()=>{if(an)allocRTA()});
+$('#rAvg').addEventListener('change',e=>{if(an)an.smoothingTimeConstant=+e.target.value});
+['#rMode','#rSmooth'].forEach(s=>$(s).addEventListener('change',()=>{peaks=null;redrawRTA()}));
+function redrawRTA(){RA.dirty=true;if(!rtaOn&&RA.P&&curTab==='rta'){drawRTA();drawSG(0,false)}}
+$('#rRef').onclick=()=>{
+  if(!RA.P||!an){toast('Démarrez l’analyseur avant de capturer une référence.');return}
+  const N=+$('#rSmooth').value||24;
+  RA.ref={grid:GRID.map(fc=>Math.round(smoothAt(fc,N)*10)/10),bands:OCT.map(c=>Math.round(bandLevel(c)*10)/10),t:Date.now()};
+  store.set('regie.ref',RA.ref); setRunUI(); redrawRTA(); toast('Courbe de référence capturée.');
+};
+$('#rRefClr').onclick=()=>{RA.ref=null;store.set('regie.ref',null);setRunUI();redrawRTA()};
+$('#rSave').onclick=()=>{
+  if(!RA.P||!an){toast('Démarrez l’analyseur avant d’envoyer une courbe.');return}
+  const w=$('#rW').value, bands=OCT.map(c=>Math.round(bandLevel(c)*10)/10);
+  const it=addItem({kind:'curve',title:`Spectre 1/3 oct. (pond. ${w}${RA.avg?', moyenne de '+RA.avgN+' trames':''})`,bands,weight:w,fft:an.fftSize,avgN:RA.avg?RA.avgN:0});
+  toast('Courbe envoyée au projet « '+proj().name+' ».',()=>removeItem(it.id));
+};
 function micErr(e){return (e&&e.name==='NotAllowedError')?'Accès au micro refusé. Autorisez-le dans les réglages.':(e&&e.message)||'Micro indisponible.'}
-const FMIN=20,FMAX=20000,LMIN=Math.log10(FMIN),LSPAN=Math.log10(FMAX)-LMIN;
-function loop(){
+function loop(ts){
   if(!rtaOn)return;
   raf=requestAnimationFrame(loop);
-  if(curTab!=='rta'||frozen||document.hidden)return;
-  an.getFloatFrequencyData(fbuf); an.getFloatTimeDomainData(tbuf);
-  let s=0;for(let i=0;i<tbuf.length;i++)s+=tbuf[i]*tbuf[i];
-  const rms=10*Math.log10(s/tbuf.length+1e-20);
-  const sr=ctx.sampleRate,bw=sr/an.fftSize; let pk=Math.ceil(20/bw);for(let i=pk+1;i<fbuf.length;i++)if(fbuf[i]>fbuf[pk])pk=i;
-  $('#rInfo').textContent=f(rms,1)+' dBFS · pic '+(pk*bw>=1000?f(pk*bw/1000,2)+' k':f(pk*bw,0)+' ')+'Hz';
-  drawRTA(); drawSG();
+  const dt=RA.lastT?Math.min(0.25,(ts-RA.lastT)/1000):0; RA.lastT=ts;
+  if(curTab!=='rta'||document.hidden)return;
+  let adv=false;
+  if(!frozen){
+    const m=grab(); adv=true; RA.dirty=true;
+    if(m.pk>-0.5)RA.clipT=ts;
+    if(ts-RA.pkT>200){RA.pkT=ts;updateMeter(m,ts);updatePeaks()}
+  }
+  if(RA.dirty){drawRTA();drawSG(dt,adv);RA.dirty=false}
 }
-function bandPower(lo,hi){const bw=ctx.sampleRate/an.fftSize;let p=0,k0=Math.max(1,Math.ceil(lo/bw)),k1=Math.min(fbuf.length-1,Math.floor(hi/bw));
-  if(k1<k0){k0=k1=Math.min(fbuf.length-1,Math.max(1,Math.round((lo+hi)/2/bw)))}
-  for(let k=k0;k<=k1;k++)p+=Math.pow(10,fbuf[k]/10);return 10*Math.log10(p+1e-20)}
+function updateMeter(m,ts){
+  const pos=db=>clamp((db+60)/60,0,1)*100;
+  $('#rMRms').style.width=pos(m.rms)+'%'; $('#rMPk').style.left='calc('+pos(m.pk)+'% - 1px)';
+  $('#rMeter').classList.toggle('clip',ts-RA.clipT<1000);
+  const bw=ctx.sampleRate/an.fftSize;
+  $('#rInfo').textContent=`RMS ${f(m.rms,1)} · crête ${f(m.pk,1)} dBFS · Δf ${f(bw,1)} Hz · ${f(an.fftSize/ctx.sampleRate*1000,0)} ms`;
+  if(RA.avg)$('#rAvgBtn').textContent='MOY. '+RA.avgN;
+}
+function updatePeaks(){
+  const pk=findPeaks(3);
+  $('#rPeaks').textContent=pk.length?'Pics  '+pk.map(p=>`${fHz(p.hz)} ${noteName(p.hz).split(' ')[0]} ${f(p.db,0)}`.replace(/ /g,'\u00a0')).join(' · '):'';
+}
+function cursorBox(g,w,h,d,x,lines,top){
+  g.font=`${10*d}px ${css('--mono')}`;
+  const tw=Math.max(...lines.map(t=>g.measureText(t).width))+10*d, th=lines.length*13*d+6*d;
+  let bx=x+8*d; if(bx+tw>w)bx=x-8*d-tw;
+  const by=top??4*d;
+  g.fillStyle=css('--bg'); g.globalAlpha=0.88; g.fillRect(bx,by,tw,th); g.globalAlpha=1;
+  g.strokeStyle=css('--line'); g.lineWidth=1; g.strokeRect(bx+0.5,by+0.5,tw-1,th-1);
+  g.fillStyle=css('--fg'); g.textAlign='left'; lines.forEach((t,i)=>g.fillText(t,bx+5*d,by+14*d+i*13*d));
+}
 function drawRTA(){
-  const cv=$('#rCv'),{w,h,d}=fitCanvas(cv),g=cv.getContext('2d'),top=-10,bot=-120;
+  const cv=$('#rCv'); if(cv.offsetParent===null)return;
+  const {w,h,d}=fitCanvas(cv),g=cv.getContext('2d'),top=0,bot=-120;
   const xf=fq=>(Math.log10(fq)-LMIN)/LSPAN*w, yd=db=>(top-db)/(top-bot)*h;
-  g.clearRect(0,0,w,h); g.lineWidth=1; g.strokeStyle=css('--line'); g.fillStyle=css('--dim'); g.font=`${9*d}px ${css('--mono')}`;
-  [50,100,200,500,1000,2000,5000,10000].forEach(fq=>{const x=Math.round(xf(fq))+.5;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.fillText(fq>=1000?fq/1000+'k':fq,x+2*d,h-3*d)});
+  g.clearRect(0,0,w,h); g.lineWidth=1; g.strokeStyle=css('--line'); g.fillStyle=css('--dim'); g.font=`${9*d}px ${css('--mono')}`; g.textAlign='left';
+  [31.5,63,125,250,500,1000,2000,4000,8000,16000].forEach(fq=>{const x=Math.round(xf(fq))+.5;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.fillText(fq>=1000?fq/1000+'k':fq,x+2*d,h-3*d)});
   for(let db=-20;db>bot;db-=20){const y=Math.round(yd(db))+.5;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();g.fillText(db,2*d,y-2*d)}
-  const acc=css('--accent'), mode=segVal('#rMode'), bw=ctx.sampleRate/an.fftSize;
+  if(!RA.P||!an){g.textAlign='center';g.fillText('Démarrez l’analyseur pour afficher le spectre.',w/2,h/2);return}
+  const acc=css('--accent'), blue=css('--blue'), fg=css('--fg'), mode=$('#rMode').value;
   if(mode==='oct'){
-    const vals=OCT.map(c=>bandPower(c/Math.pow(2,1/6),c*Math.pow(2,1/6)));
+    const vals=OCT.map(bandLevel); RA.bands=vals;
     if(hold){if(!peaks||peaks.length!==vals.length)peaks=vals.slice();else vals.forEach((v,i)=>peaks[i]=Math.max(v,peaks[i]-0.15))}
-    const n=OCT.length, bwpx=w/n;
-    vals.forEach((v,i)=>{const y=yd(v);g.fillStyle=acc;g.globalAlpha=.85;g.fillRect(i*bwpx+1*d,y,bwpx-2*d,h-y);g.globalAlpha=1;
-      if(hold&&peaks){g.fillStyle=css('--fg');g.fillRect(i*bwpx+1*d,yd(peaks[i]),bwpx-2*d,2*d)}});
+    const n=OCT.length,bp=w/n;
+    vals.forEach((v,i)=>{const y=yd(v);g.fillStyle=acc;g.globalAlpha=.85;g.fillRect(i*bp+1*d,y,bp-2*d,h-y);g.globalAlpha=1;
+      if(hold&&peaks){g.fillStyle=fg;g.fillRect(i*bp+1*d,yd(peaks[i]),bp-2*d,2*d)}
+      if(RA.ref){g.fillStyle=blue;g.fillRect(i*bp,yd(RA.ref.bands[i])-1*d,bp,2*d)}});
+    if(RA.cur!=null){const i=clamp(Math.floor(RA.cur*n),0,n-1),x=(i+0.5)*bp;g.strokeStyle=fg;g.setLineDash([3*d,3*d]);g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();g.setLineDash([]);
+      cursorBox(g,w,h,d,x,[fHz(OCT[i])+' (1/3 oct)',f(vals[i],1)+' dB'+(RA.ref?' · réf. '+(vals[i]-RA.ref.bands[i]>0?'+':'')+f(vals[i]-RA.ref.bands[i],1):'')])}
     return;
   }
-  // FFT : max par colonne de pixels
-  const col=new Float32Array(w).fill(-200);
-  for(let k=1;k<fbuf.length;k++){const fq=k*bw;if(fq<FMIN||fq>FMAX)continue;const x=Math.floor(xf(fq));if(x>=0&&x<w&&fbuf[k]>col[x])col[x]=fbuf[k]}
-  let last=-200;for(let x=0;x<w;x++){if(col[x]<=-199)col[x]=last;else last=col[x]}
-  for(let x=w-1,nx=-200;x>=0;x--){if(col[x]<=-199)col[x]=nx;else nx=col[x]}
+  const col=colLevels(w); RA.cols=col;
   if(hold){if(!peaks||peaks.length!==w)peaks=Float32Array.from(col);else for(let x=0;x<w;x++)peaks[x]=Math.max(col[x],peaks[x]-0.15)}
+  if(RA.ref){g.beginPath();for(let x=0;x<w;x++){const gi=clamp(Math.log(fAtX(x+0.5,w)/20)/Math.log(1000)*240,0,240),k=Math.min(239,Math.floor(gi)),u=gi-k,v=RA.ref.grid[k]*(1-u)+RA.ref.grid[k+1]*u;x?g.lineTo(x,yd(v)):g.moveTo(x,yd(v))}
+    g.strokeStyle=blue;g.lineWidth=1.5*d;g.setLineDash([5*d,3*d]);g.stroke();g.setLineDash([])}
   g.beginPath();g.moveTo(0,h);for(let x=0;x<w;x++)g.lineTo(x,yd(col[x]));g.lineTo(w,h);g.closePath();
   g.fillStyle=acc;g.globalAlpha=.14;g.fill();g.globalAlpha=1;
   g.beginPath();for(let x=0;x<w;x++)x?g.lineTo(x,yd(col[x])):g.moveTo(x,yd(col[x]));g.strokeStyle=acc;g.lineWidth=1.5*d;g.stroke();
-  if(hold&&peaks){g.beginPath();for(let x=0;x<w;x++)x?g.lineTo(x,yd(peaks[x])):g.moveTo(x,yd(peaks[x]));g.strokeStyle=css('--fg');g.globalAlpha=.6;g.lineWidth=1*d;g.stroke();g.globalAlpha=1}
+  if(hold&&peaks){g.beginPath();for(let x=0;x<w;x++)x?g.lineTo(x,yd(peaks[x])):g.moveTo(x,yd(peaks[x]));g.strokeStyle=fg;g.globalAlpha=.6;g.lineWidth=1*d;g.stroke();g.globalAlpha=1}
+  if(RA.cur!=null){const x=clamp(Math.round(RA.cur*w),0,w-1),hz=fAtX(x+0.5,w);
+    g.strokeStyle=fg;g.lineWidth=1;g.setLineDash([3*d,3*d]);g.beginPath();g.moveTo(x+.5,0);g.lineTo(x+.5,h);g.stroke();g.setLineDash([]);
+    g.fillStyle=fg;g.beginPath();g.arc(x,yd(col[x]),3*d,0,7);g.fill();
+    cursorBox(g,w,h,d,x,[fHz(hz)+'  '+noteName(hz),f(col[x],1)+' dB'+(RA.ref?(()=>{const gi=clamp(Math.log(hz/20)/Math.log(1000)*240,0,240),k=Math.min(239,Math.floor(gi)),u=gi-k,v=RA.ref.grid[k]*(1-u)+RA.ref.grid[k+1]*u;return ' · réf. '+(col[x]-v>0?'+':'')+f(col[x]-v,1)})():'')])}
 }
-function drawSG(){
-  const cv=$('#sgCv'),{w,h}=fitCanvas(cv),g=cv.getContext('2d');
-  // décale d'un pixel vers la gauche, colonne neuve à droite (bas = graves)
-  g.drawImage(cv,1,0,w-1,h,0,0,w-1,h);
-  if(!sgImg||sgImg.height!==h)sgImg=g.createImageData(1,h);
-  const bw=ctx.sampleRate/an.fftSize, data=sgImg.data, lo=-115, hi=-25;
+/* Spectrogramme : tampon hors écran qui défile, colonnes calculées depuis le spectre instantané */
+function sgFreqAt(y,h){const sr=ctx?ctx.sampleRate:48000;return $('#sgScale').value==='lin'?(1-y/h)*Math.min(FMAX,sr/2):Math.pow(10,LMIN+(1-y/h)*LSPAN)}
+function sgSetup(w,h){
+  const old=RA.sgBuf; RA.sgBuf=document.createElement('canvas'); RA.sgBuf.width=w; RA.sgBuf.height=h;
+  const g=RA.sgBuf.getContext('2d'); g.fillStyle=css('--bg'); g.fillRect(0,0,w,h);
+  if(old&&old.width&&$('#sgScale').value===RA.sgScale)g.drawImage(old,0,0,w,h);
+  RA.sgScale=$('#sgScale').value;
+  RA.sgImg=g.createImageData(1,h); RA.sgRows=null; RA.sgAcc=0;
+}
+function sgRowsCalc(h){
+  const bw=ctx.sampleRate/an.fftSize, n=RA.L.length, k0=new Int32Array(h), k1=new Int32Array(h), kf=new Float32Array(h);
   for(let y=0;y<h;y++){
-    const f0=Math.pow(10,LMIN+(1-(y+1)/h)*LSPAN), f1=Math.pow(10,LMIN+(1-y/h)*LSPAN);
-    let k0=Math.max(1,Math.floor(f0/bw)),k1=Math.max(k0,Math.min(fbuf.length-1,Math.ceil(f1/bw))),m=-200;
-    for(let k=k0;k<=k1;k++)if(fbuf[k]>m)m=fbuf[k];
-    const i=Math.max(0,Math.min(255,Math.round((m-lo)/(hi-lo)*255)));
-    data[y*4]=LUT[i*3];data[y*4+1]=LUT[i*3+1];data[y*4+2]=LUT[i*3+2];data[y*4+3]=255;
+    const fa=sgFreqAt(y+1,h), fb=sgFreqAt(y,h);
+    k0[y]=Math.max(1,Math.ceil(fa/bw)); k1[y]=Math.min(n-1,Math.floor(fb/bw)); kf[y]=clamp((fa+fb)/2/bw,1,n-2);
   }
-  g.putImageData(sgImg,w-1,0);
+  return {k0,k1,kf,h,fft:an.fftSize};
 }
+function drawSG(dt,advance){
+  const cv=$('#sgCv'); if(cv.offsetParent===null)return;
+  const {w,h,d}=fitCanvas(cv), g=cv.getContext('2d');
+  if(!RA.sgBuf||RA.sgBuf.width!==w||RA.sgBuf.height!==h)sgSetup(w,h);
+  const B=RA.sgBuf, bg=B.getContext('2d');
+  if(advance&&an&&RA.L){
+    if(!RA.sgRows||RA.sgRows.h!==h||RA.sgRows.fft!==an.fftSize)RA.sgRows=sgRowsCalc(h);
+    RA.sgAcc+=dt*w/(+$('#sgSpan').value);
+    let np=Math.min(w,Math.floor(RA.sgAcc)); RA.sgAcc-=np;
+    if(np>0){
+      bg.drawImage(B,np,0,w-np,h,0,0,w-np,h);
+      const L=RA.L,R=RA.sgRows,px=RA.sgImg.data,hi=+$('#sgHi').value,lo=hi-(+$('#sgDyn').value);
+      for(let y=0;y<h;y++){
+        let m=0;
+        if(R.k1[y]>=R.k0[y]){for(let k=R.k0[y];k<=R.k1[y];k++)if(L[k]>m)m=L[k]}
+        else{const k=Math.floor(R.kf[y]),u=R.kf[y]-k;m=L[k]*(1-u)+L[k+1]*u}
+        const i=Math.max(0,Math.min(255,Math.round((10*Math.log10(m+1e-30)-lo)/(hi-lo)*255)));
+        px[y*4]=LUT[i*3];px[y*4+1]=LUT[i*3+1];px[y*4+2]=LUT[i*3+2];px[y*4+3]=255;
+      }
+      bg.putImageData(RA.sgImg,w-1,0);
+      if(np>1)bg.drawImage(B,w-1,0,1,h,w-np,0,np-1,h);
+    }
+  }
+  g.drawImage(B,0,0);
+  // axes
+  g.font=`${9*d}px ${css('--mono')}`; g.textAlign='left';
+  const lin=$('#sgScale').value==='lin';
+  const ticks=lin?[2000,4000,6000,8000,10000,12000,14000,16000,18000]:[50,100,200,500,1000,2000,5000,10000];
+  ticks.forEach(fq=>{const y=lin?(1-fq/Math.min(FMAX,(ctx?ctx.sampleRate:48000)/2))*h:(1-(Math.log10(fq)-LMIN)/LSPAN)*h;
+    g.fillStyle=css('--bg');g.globalAlpha=0.55;g.fillRect(0,y-1,26*d,1);g.globalAlpha=1;
+    g.fillStyle=css('--fg');g.globalAlpha=0.75;g.fillRect(0,Math.round(y),5*d,1);g.fillText(fq>=1000?fq/1000+'k':fq,7*d,y+3*d);g.globalAlpha=1});
+  const span=+$('#sgSpan').value, stp=span/5;
+  for(let k=1;k<5;k++){const x=w-k*stp/span*w;g.fillStyle=css('--fg');g.globalAlpha=0.6;g.fillRect(Math.round(x),h-4*d,1,4*d);g.textAlign='center';g.fillText('−'+f(k*stp,0)+' s',x,h-6*d);g.globalAlpha=1}
+  if(RA.sgCur!=null){const y=clamp(RA.sgCur,0,1)*h,hz=sgFreqAt(y,h);
+    g.strokeStyle=css('--fg');g.lineWidth=1;g.setLineDash([3*d,3*d]);g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();g.setLineDash([]);
+    cursorBox(g,w,h,d,w*0.55,[fHz(hz)+'  '+noteName(hz)],clamp(y-24*d,2*d,h-24*d))}
+}
+['#sgHi','#sgDyn'].forEach(s=>$(s).addEventListener('input',sgLabels));
+function sgLabels(){$('#sgHiV').textContent=$('#sgHi').value+' dB';$('#sgDynV').textContent=$('#sgDyn').value+' dB';$('#sgInfo').textContent=`${+$('#sgHi').value-(+$('#sgDyn').value)} à ${$('#sgHi').value} dBFS`}
+$('#sgScale').addEventListener('change',()=>{RA.sgBuf=null;RA.sgRows=null;redrawRTA()});
+$('#sgSpan').addEventListener('change',()=>{RA.sgAcc=0;redrawRTA()});
+function bindCursor(cv,key,axis){
+  let down=false;
+  const set=e=>{const r=cv.getBoundingClientRect();RA[key]=axis==='x'?(e.clientX-r.left)/r.width:(e.clientY-r.top)/r.height;redrawRTA()};
+  cv.addEventListener('pointerdown',e=>{down=true;set(e)});
+  cv.addEventListener('pointermove',e=>{if(down)set(e)});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,()=>down=false));
+  cv.addEventListener('dblclick',()=>{RA[key]=null;redrawRTA()});
+}
+bindCursor($('#rCv'),'cur','x'); bindCursor($('#sgCv'),'sgCur','y');
+sgLabels(); setRunUI();
 
 /* ================= DÉLAIS ================= */
 let recNode=null, recWait=null, recBuf=null, recF0=0, recLen=0;
@@ -937,8 +1802,10 @@ function drawIR(){
 
 /* ---------- Init ---------- */
 function refreshAll(){calcSon();calcTrigo();calcArray();if(curTab==='array')drawArray();showDelay()}
-window.addEventListener('resize',()=>{if(curTab==='array')drawArray();if(curTab==='delai')drawIR()});
+window.addEventListener('resize',()=>{if(curTab==='array')drawArray();if(curTab==='delai')drawIR();if(curTab==='trigo'){drawScene();calcTri()}if(curTab==='rta')redrawRTA()});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&curTab==='heures')renderHeures()});
+initMem();
+loadTrigo();
 setT(T);
 renderHeures();
 show(store.get('regie.tab','heures'));
